@@ -60,6 +60,7 @@ import { SovereignStatusBar } from './components/SovereignStatusBar';
 import { SpatialMemoryLandscape } from './components/SpatialMemoryLandscape';
 import { TimeAwareRitualsModal } from './components/TimeAwareRitualsModal';
 import { UniversalSearch } from './components/UniversalSearch';
+import { IzaLifeNav } from './components/IzaLifeNav';
 import { purchases } from './lib/purchases';
 
 export default function App() {
@@ -1670,6 +1671,27 @@ export default function App() {
           setConfidantInput(prompt);
           setRitualsOpen(false);
         }}
+      />
+
+      {/* IZA LIFE navigation: IZA · RECALL · ＋ · PEOPLE · ME */}
+      <IzaLifeNav
+        onHome={() => {
+          setLiveVoiceOpen(false);
+          setVisualUploadOpen(false);
+          setUniversalSearchOpen(false);
+          setEntityDrawerOpen(false);
+          setSettingsOpen(false);
+          setWebAgentOpen(false);
+          setSpatialMemoryOpen(false);
+          setRitualsOpen(false);
+        }}
+        onRecall={() => setUniversalSearchOpen(true)}
+        onPeople={() => setEntityDrawerOpen(true)}
+        onMe={() => setSettingsOpen(true)}
+        onTalk={() => setLiveVoiceOpen(true)}
+        onSee={() => setVisualUploadOpen(true)}
+        onAdd={() => setAudioTranscribeOpen(true)}
+        onWrite={(text) => anchorMemory(text, 'note')}
       />
     </div>
   );
