@@ -441,6 +441,10 @@ app.post('/api/memories/recall', handleRecall);
 // Delete memories by keyword search query
 app.delete('/api/memories/search', async (req, res) => {
   try {
+  // Disabled until rows are scoped to their owner (user_id). Deleting by keyword would hit every user's data.
+  return res.status(501).json({ error: 'Delete by query is not available yet.' });
+  // eslint-disable-next-line no-unreachable
+
     const query = String(req.query.q || req.body?.q || req.body?.query || '').trim();
     if (!query) {
       return res.status(400).json({ error: 'Search query parameter q is required' });
@@ -465,6 +469,10 @@ app.delete('/api/memories/search', async (req, res) => {
 
 app.post('/api/memories/delete-by-query', async (req, res) => {
   try {
+  // Disabled until rows are scoped to their owner (user_id). Deleting by keyword would hit every user's data.
+  return res.status(501).json({ error: 'Delete by query is not available yet.' });
+  // eslint-disable-next-line no-unreachable
+
     const query = String(req.body?.query || req.body?.q || '').trim();
     if (!query) {
       return res.status(400).json({ error: 'Search query is required' });
