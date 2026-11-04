@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Database
 } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 interface BioscienceWorkbenchProps {
   isOpen: boolean;
@@ -42,7 +43,7 @@ export function BioscienceWorkbench({ isOpen, onClose, onAnchorMemory }: Bioscie
     setCompoundResult(null);
 
     try {
-      const res = await fetch(`/api/science/pubchem?name=${encodeURIComponent(name.trim())}`);
+      const res = await apiFetch(`/api/science/pubchem?name=${encodeURIComponent(name.trim())}`);
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'Compound not found');
@@ -62,7 +63,7 @@ export function BioscienceWorkbench({ isOpen, onClose, onAnchorMemory }: Bioscie
     setProteinResults([]);
 
     try {
-      const res = await fetch(`/api/science/uniprot?query=${encodeURIComponent(term.trim())}`);
+      const res = await apiFetch(`/api/science/uniprot?query=${encodeURIComponent(term.trim())}`);
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'UniProt search failed');
@@ -85,7 +86,7 @@ export function BioscienceWorkbench({ isOpen, onClose, onAnchorMemory }: Bioscie
     setAnalysisResult(null);
 
     try {
-      const res = await fetch('/api/science/analyze', {
+      const res = await apiFetch('/api/science/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target: target.trim() }),

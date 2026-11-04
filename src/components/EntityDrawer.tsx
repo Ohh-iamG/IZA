@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Network, Calendar, Tag, ArrowRight, User, MapPin, Wrench, FolderGit2, FileText, Sparkles, Loader2 } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 interface EntityRecord {
   id: number | string;
@@ -48,7 +49,7 @@ export function EntityDrawer({ isOpen, onClose, initialEntityId }: EntityDrawerP
     }
 
     setIsLoadingEntities(true);
-    fetch('/api/entities')
+    apiFetch('/api/entities')
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -67,7 +68,7 @@ export function EntityDrawer({ isOpen, onClose, initialEntityId }: EntityDrawerP
     setSelectedEntity(entity);
     setIsLoadingTimeline(true);
     try {
-      const res = await fetch(`/api/entities/${entity.id}/timeline`);
+      const res = await apiFetch(`/api/entities/${entity.id}/timeline`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setTimeline(data);

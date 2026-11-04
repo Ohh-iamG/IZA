@@ -17,6 +17,7 @@ import {
   Sparkles,
   MessageSquare
 } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 interface TimeAwareRitualsModalProps {
   isOpen: boolean;
@@ -43,7 +44,7 @@ export function TimeAwareRitualsModal({
   const fetchPulse = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/rituals/pulse');
+      const res = await apiFetch('/api/rituals/pulse');
       const data = await res.json();
       setPulseData(data);
       if (data.phase === 'evening') {
@@ -75,7 +76,7 @@ export function TimeAwareRitualsModal({
   const handleCompleteRitual = async (phase: 'morning' | 'evening') => {
     setSubmitting(true);
     try {
-      const res = await fetch('/api/rituals/complete', {
+      const res = await apiFetch('/api/rituals/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

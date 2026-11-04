@@ -1,3 +1,4 @@
+import { auth } from './firebase';
 /**
  * Live audio & video streaming manager for Gemini 3.8 Live API
  * Designed for mobile phone hardware (iOS Safari, Android Chrome, and desktop).
@@ -139,7 +140,10 @@ export class GeminiLiveClient {
     this.callbacks.onStatusChange?.('connecting');
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/live`;
+    const host = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/^https?:\/\//, '') || window.location.host;
+    const wsProtocol = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.startsWith('http://') ? 'ws:' : protocol;
+    const idToken = (await auth.currentUser?.getIdToken()) ?? '';
+    const wsUrl = `${wsProtocol}//${host}/live?token=${encodeURIComponent(idToken)}`;
 
     return new Promise((resolve, reject) => {
       try {

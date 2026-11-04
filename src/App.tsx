@@ -63,6 +63,7 @@ import { UniversalSearch } from './components/UniversalSearch';
 import { IzaLifeNav } from './components/IzaLifeNav';
 import { IzaLifeHome } from './components/IzaLifeHome';
 import { purchases } from './lib/purchases';
+import { apiFetch } from './lib/api';
 
 export default function App() {
   const [time, setTime] = useState(new Date());
@@ -166,7 +167,7 @@ export default function App() {
 
   const fetchDailyPulse = async () => {
     try {
-      const res = await fetch('/api/pulse/daily');
+      const res = await apiFetch('/api/pulse/daily');
       const data = await res.json();
       if (data && data.summary) {
         setDailyPulseData(data);
@@ -184,7 +185,7 @@ export default function App() {
     formData.append('image', file);
 
     try {
-      const res = await fetch('/api/attachments/upload', {
+      const res = await apiFetch('/api/attachments/upload', {
         method: 'POST',
         body: formData,
       });
@@ -210,7 +211,7 @@ export default function App() {
     setIsEnriching(true);
     setEnrichStatus('Synthesizing un-enriched memories with Gemini 3.8 Flash...');
     try {
-      const res = await fetch('/api/memories/enrich', { method: 'POST' });
+      const res = await apiFetch('/api/memories/enrich', { method: 'POST' });
       const data = await res.json();
       setEnrichStatus(data.message || `Enriched ${data.enrichedCount} memories.`);
       await loadMemories();
@@ -383,7 +384,7 @@ export default function App() {
 
   const loadMemories = async () => {
     try {
-      const res = await fetch('/api/memories');
+      const res = await apiFetch('/api/memories');
       const data = await res.json();
       if (Array.isArray(data)) {
         setVaultMemories(data.map((m: any) => ({
@@ -434,7 +435,7 @@ export default function App() {
       if (!navigator.onLine) {
         throw new Error('Offline');
       }
-      const res = await fetch('/api/memories', {
+      const res = await apiFetch('/api/memories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: clean, kind, salience: 0.85 })
@@ -459,7 +460,7 @@ export default function App() {
       });
     }
     try {
-      await fetch(`/api/memories/${id}`, { method: 'DELETE' });
+      await apiFetch(`/api/memories/${id}`, { method: 'DELETE' });
     } catch (err) {
       console.error('Failed to delete memory:', err);
     }
@@ -477,7 +478,7 @@ export default function App() {
     setEnrichStatus(`Deleting memories matching "${q}"...`);
 
     try {
-      const res = await fetch(`/api/memories/search?q=${encodeURIComponent(q)}`, {
+      const res = await apiFetch(`/api/memories/search?q=${encodeURIComponent(q)}`, {
         method: 'DELETE',
       });
       const data = await res.json();
@@ -497,7 +498,7 @@ export default function App() {
     setMemorySearch(q);
     setEnrichStatus(`IZA searching sovereign vault for: "${q}"...`);
     try {
-      const res = await fetch('/api/memories/recall', {
+      const res = await apiFetch('/api/memories/recall', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: q }),
@@ -547,7 +548,7 @@ export default function App() {
       if (query) {
         handleDeleteBySearch(query);
       } else {
-        fetch('/api/memories/search?q=' + encodeURIComponent(cmd), { method: 'DELETE' })
+        apiFetch('/api/memories/search?q=' + encodeURIComponent(cmd), { method: 'DELETE' })
           .then(() => loadMemories());
       }
     } else if (cmd.startsWith('iza capture')) {
@@ -588,7 +589,7 @@ export default function App() {
     } else if (cmd.startsWith('iza checkin')) {
       const match = cmd.match(/iza checkin ["'](.*?)["']/);
       const note = match ? match[1] : 'Sovereign check-in verified';
-      fetch('/api/checkins', {
+      apiFetch('/api/checkins', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ note })
@@ -614,7 +615,7 @@ export default function App() {
     anchorMemory(userText, 'dialogue');
 
     try {
-      const res = await fetch('/api/gemini/chat', {
+      const res = await apiFetch('/api/gemini/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1543,7 +1544,7 @@ export default function App() {
             { id: Date.now(), type: 'voice', content: text, time: time.toISOString().split('T')[1].slice(0, 5) },
             ...prev
           ]);
-          fetch('/api/memories', {
+          apiFetch('/api/memories', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content: text, kind: 'voice', salience: 0.7 })

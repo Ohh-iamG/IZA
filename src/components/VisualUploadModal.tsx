@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { X, UploadCloud, Image as ImageIcon, Sparkles, Loader2, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 interface VisualUploadModalProps {
   isOpen: boolean;
@@ -50,7 +51,7 @@ export function VisualUploadModal({ isOpen, onClose, onUploaded }: VisualUploadM
       reader.onload = async () => {
         try {
           const base64Data = reader.result as string;
-          const res = await fetch('/api/attachments', {
+          const res = await apiFetch('/api/attachments', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

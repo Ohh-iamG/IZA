@@ -20,6 +20,7 @@ import {
   X,
   Loader2
 } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 export interface SnapshotCard {
   id: number;
@@ -103,7 +104,7 @@ export function SpatialMemoryLandscape({
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/snapshots', {
+      const res = await apiFetch('/api/snapshots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

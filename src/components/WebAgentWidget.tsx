@@ -13,6 +13,7 @@ import {
   Check,
   X
 } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 interface WebAgentWidgetProps {
   onMemoryAnchored?: (content: string, title: string) => void;
@@ -49,7 +50,7 @@ export function WebAgentWidget({ onMemoryAnchored, isModal = false, onClose }: W
     setErrorNotice(null);
 
     try {
-      const res = await fetch('/api/web/scrape', {
+      const res = await apiFetch('/api/web/scrape', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: targetUrl.trim(), anchorToVault: autoAnchor }),

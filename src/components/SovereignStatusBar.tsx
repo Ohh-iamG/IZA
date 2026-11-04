@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Lock, Database, Cpu, AlertCircle, CheckCircle2, ChevronRight, X, ExternalLink } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 export function SovereignStatusBar() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -15,7 +16,7 @@ export function SovereignStatusBar() {
   } | null>(null);
 
   useEffect(() => {
-    fetch('/api/system/sovereign-status')
+    apiFetch('/api/system/sovereign-status')
       .then((res) => res.json())
       .then((data) => setStatusData(data))
       .catch((err) => console.warn('Status fetch error:', err));

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { purchases, SubscriptionState } from '../lib/purchases';
 import { signInWithGoogle, signInWithApple, signInAsDemoReviewer, logOut } from '../lib/firebase';
+import { apiFetch } from '../lib/api';
 
 interface SettingsPrivacyModalProps {
   isOpen: boolean;
@@ -97,7 +98,7 @@ export function SettingsPrivacyModal({
     setIsPurging(true);
     setStatusNotice(null);
     try {
-      const res = await fetch('/api/user/purge', { method: 'DELETE' });
+      const res = await apiFetch('/api/user/purge', { method: 'DELETE' });
       if (!res.ok) throw new Error('Account purge failed');
       
       // Clear client storage

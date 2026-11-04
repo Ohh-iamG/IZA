@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, BellOff, BellRing, Check, AlertCircle, Send, Shield, Pill, HeartPulse, X } from 'lucide-react';
+import { apiFetch } from '../../lib/api';
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -59,7 +60,7 @@ export function PushNotificationManager() {
       }
 
       // Fetch VAPID key
-      const keyRes = await fetch('/api/push/public-key');
+      const keyRes = await apiFetch('/api/push/public-key');
       const { publicKey } = await keyRes.json();
       if (!publicKey) {
         throw new Error('VAPID public key unavailable');
@@ -77,7 +78,7 @@ export function PushNotificationManager() {
       }
 
       // Send subscription to server
-      const saveRes = await fetch('/api/push/subscribe', {
+      const saveRes = await apiFetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -104,7 +105,7 @@ export function PushNotificationManager() {
     setIsTesting(type);
     setStatusMessage(null);
     try {
-      const res = await fetch('/api/push/test', {
+      const res = await apiFetch('/api/push/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type }),
