@@ -1,3 +1,5 @@
+import { requireAuth } from './src/middleware/auth.ts';
+import { adminAuth } from './src/lib/firebase-admin.ts';
 import express from 'express';
 import http from 'http';
 import path from 'path';
@@ -81,6 +83,12 @@ process.on('uncaughtException', (err) => {
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 const app = express();
+
+// Every /api route requires a verified Firebase ID token, except the public VAPID key.
+app.use('/api', (req, res, next) => {
+  if (req.method === 'GET' && req.path === '/push/public-key') return next();
+  return requireAuth(req as any, res, next);
+});
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
@@ -112,9 +120,19 @@ server.on('upgrade', (request, socket, head) => {
   try {
     const url = new URL(request.url || '', `http://${request.headers.host || 'localhost'}`);
     if (url.pathname === '/live') {
-      wss.handleUpgrade(request, socket, head, (clientWs) => {
-        wss.emit('connection', clientWs, request);
-      });
+      // Gemini Live is paid per session: only verified users may open it.
+      // Browsers cannot send headers on WebSocket, so the Firebase ID token is passed as ?token=.
+      const token = url.searchParams.get('token') || '';
+      adminAuth.verifyIdToken(token)
+        .then(() => {
+          wss.handleUpgrade(request, socket, head, (clientWs) => {
+            wss.emit('connection', clientWs, request);
+          });
+        })
+        .catch(() => {
+          socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+          socket.destroy();
+        });
       return;
     }
 
@@ -889,6 +907,10 @@ app.post('/api/checkins', async (req, res) => {
 
 // DELETE /api/user/purge - Mandatory Apple & Google Store Account & Data Purge (Guideline 5.1.1)
 app.delete('/api/user/purge', async (_req, res) => {
+  // Disabled: the memory tables have no owner column, so this would erase every user's data.
+  // Re-enable only after per-user scoping (user_id on every table) and Firebase account deletion are in place.
+  return res.status(501).json({ error: 'Account purge is not available yet.' });
+  // eslint-disable-next-line no-unreachable
   try {
     // Purge memory vault records from Cloud SQL
     await pool.query('DELETE FROM link').catch(() => {});

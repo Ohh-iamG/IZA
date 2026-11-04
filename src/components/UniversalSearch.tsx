@@ -18,6 +18,7 @@ import {
   Copy,
   Check
 } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 export interface UniversalSearchResult {
   id: number;
@@ -62,7 +63,7 @@ export function UniversalSearch({
   const executeSearch = async (targetQuery = query, targetDomain = domain) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/search/universal?q=${encodeURIComponent(targetQuery)}&domain=${targetDomain}`);
+      const res = await apiFetch(`/api/search/universal?q=${encodeURIComponent(targetQuery)}&domain=${targetDomain}`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setResults(data);
@@ -92,7 +93,7 @@ export function UniversalSearch({
     setIsUploading(true);
     setUploadSuccessNotice(null);
     try {
-      const res = await fetch('/api/documents/upload', {
+      const res = await apiFetch('/api/documents/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

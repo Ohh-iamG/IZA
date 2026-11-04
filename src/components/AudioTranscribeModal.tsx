@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mic, Square, Loader2, Copy, Check, Sparkles, X, Volume2, ArrowRight } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 interface AudioTranscribeModalProps {
   isOpen: boolean;
@@ -86,7 +87,7 @@ export function AudioTranscribeModal({ isOpen, onClose, onTranscriptReady }: Aud
       reader.readAsDataURL(blob);
       const dataUrl = await base64Promise;
 
-      const res = await fetch('/api/transcribe', {
+      const res = await apiFetch('/api/transcribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

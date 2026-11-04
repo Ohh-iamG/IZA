@@ -1,4 +1,5 @@
 // Client-side IndexedDB offline fallback and auto-sync engine for IZA OS
+import { apiFetch } from './api';
 const DB_NAME = 'iza_offline_vault';
 const DB_VERSION = 1;
 const STORE_MEMORIES = 'pending_memories';
@@ -106,7 +107,7 @@ export async function flushOfflineMemoriesToServer(): Promise<{ syncedCount: num
   }
 
   try {
-    const response = await fetch('/api/memories/batch', {
+    const response = await apiFetch('/api/memories/batch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

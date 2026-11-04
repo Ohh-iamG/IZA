@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Navigation
 } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 interface GroundedIntelligenceModalProps {
   isOpen: boolean;
@@ -74,7 +75,7 @@ export function GroundedIntelligenceModal({ isOpen, onClose, onAnchorMemory }: G
 
     try {
       if (mode === 'search') {
-        const res = await fetch('/api/search-grounding', {
+        const res = await apiFetch('/api/search-grounding', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: prompt.trim() }),
@@ -83,7 +84,7 @@ export function GroundedIntelligenceModal({ isOpen, onClose, onAnchorMemory }: G
         if (!res.ok) throw new Error(data.error || 'Search grounding failed');
         setSearchResponse(data);
       } else {
-        const res = await fetch('/api/maps-grounding', {
+        const res = await apiFetch('/api/maps-grounding', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
