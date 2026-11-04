@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { audioEngine } from './lib/audio';
 import { LiveVoiceModal } from './components/LiveVoiceModal';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 export default function App() {
   const [time, setTime] = useState(new Date());
@@ -462,7 +463,7 @@ export default function App() {
         <span className="ml-auto hidden sm:inline">UTF-8</span>
         <span className="hidden sm:inline">Ln 24, Col 12</span>
       </footer>
+      <SpeedInsights />
     </div>
   );
 }
-
