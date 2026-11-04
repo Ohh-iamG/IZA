@@ -278,6 +278,13 @@ export function SettingsPrivacyModal({
             </div>
           </div>
 
+          {/* Section 3b: Contact */}
+          <div className="p-3 bg-slate-950/40 rounded-lg border border-slate-800 space-y-2">
+            <div className="font-bold text-slate-200 text-xs">CONTACT</div>
+            <a href="mailto:support@izalife.app" className="block text-[11px] text-emerald-400 hover:text-emerald-300 font-sans">support@izalife.app</a>
+            <a href="mailto:privacy@izalife.app" className="block text-[11px] text-emerald-400 hover:text-emerald-300 font-sans">privacy@izalife.app</a>
+          </div>
+
           {/* Section 4: Health Disclaimer & Store Links */}
           <div className="flex items-center justify-between p-3 bg-slate-950/40 rounded-lg border border-slate-800">
             <div>

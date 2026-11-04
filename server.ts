@@ -26,7 +26,7 @@ if (!vapidPublicKey || !vapidPrivateKey) {
 }
 
 webpush.setVapidDetails(
-  'mailto:sovereign@iza-vault.internal',
+  'mailto:support@izalife.app',
   vapidPublicKey,
   vapidPrivateKey
 );
