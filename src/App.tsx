@@ -61,6 +61,7 @@ import { SpatialMemoryLandscape } from './components/SpatialMemoryLandscape';
 import { TimeAwareRitualsModal } from './components/TimeAwareRitualsModal';
 import { UniversalSearch } from './components/UniversalSearch';
 import { IzaLifeNav } from './components/IzaLifeNav';
+import { IzaLifeHome } from './components/IzaLifeHome';
 import { purchases } from './lib/purchases';
 
 export default function App() {
@@ -76,7 +77,7 @@ export default function App() {
 
   // IZA Personal Sovereign & Memory Vault State
   const [commandInput, setCommandInput] = useState('');
-  const [vaultMemories, setVaultMemories] = useState<Array<{ id: number; type: string; content: string; time: string }>>([
+  const [vaultMemories, setVaultMemories] = useState<Array<{ id: number; type: string; content: string; time: string; capturedAt?: string }>>([
     { id: 1, type: 'event', content: 'Talked to Dave next door about fixing the back fence before winter.', time: '10:42 AM' },
     { id: 2, type: 'idea', content: 'Fleeting idea for new corporate structure utilizing 13-share veto rules.', time: '09:15 AM' }
   ]);
@@ -389,7 +390,8 @@ export default function App() {
           id: m.id,
           type: m.kind || 'note',
           content: m.content,
-          time: new Date(m.capturedAt || m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          time: new Date(m.capturedAt || m.captured_at || m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          capturedAt: new Date(m.capturedAt || m.captured_at || m.createdAt || Date.now()).toISOString()
         })));
       }
     } catch (err) {
@@ -408,7 +410,7 @@ export default function App() {
     const clean = content.trim();
     const tempId = Date.now();
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const localItem = { id: tempId, type: kind, content: clean, time: timeStr };
+    const localItem = { id: tempId, type: kind, content: clean, time: timeStr, capturedAt: new Date().toISOString() };
     setVaultMemories(prev => [localItem, ...prev]);
     setRecentAnchoredAlert(clean);
     setTimeout(() => {
@@ -829,6 +831,9 @@ export default function App() {
           </div>
         </div>
       </motion.header>
+
+      {/* IZA LIFE home: Pulse card and recent Moments */}
+      <IzaLifeHome now={time} memories={vaultMemories} pulse={dailyPulseData ? { summary: dailyPulseData.summary, priorities: dailyPulseData.priorities ?? [] } : null} />
 
       {/* 1. DAILY PULSE BRIEFING HEADER */}
       <div className="bg-slate-800/95 border-b border-slate-700/80 px-4 py-3 backdrop-blur-sm z-10">
