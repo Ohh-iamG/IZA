@@ -31,7 +31,16 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
   const [sessionStatus, setSessionStatus] = useState<
     'disconnected' | 'connecting' | 'connected' | 'speaking' | 'listening'
   >('disconnected');
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  // Push-to-talk is the default. Open mic is an option the person can switch to.
+  const [listenMode, setListenMode] = useState<'push' | 'open'>(() => {
+    try {
+      return localStorage.getItem('iza-listen-mode') === 'open' ? 'open' : 'push';
+    } catch {
+      return 'push';
+    }
+  });
+  const listenModeRef = useRef<'push' | 'open'>(listenMode);
   const [inputTranscript, setInputTranscript] = useState('');
   const [outputTranscript, setOutputTranscript] = useState('');
   const [transcriptHistory, setTranscriptHistory] = useState<
@@ -265,6 +274,9 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
     });
 
     clientRef.current = client;
+    const startMuted = listenModeRef.current === 'push';
+    client.setMicMuted(startMuted);
+    setIsMuted(startMuted);
     client.connect().catch((err) => {
       setErrorMessage(err instanceof Error ? err.message : 'Failed to connect to Live API');
     });
@@ -279,6 +291,35 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [transcriptHistory, inputTranscript, outputTranscript]);
+
+  const holdTalkStart = (e: React.PointerEvent) => {
+    e.preventDefault();
+    if (!clientRef.current) return;
+    setIsMuted(false);
+    clientRef.current.setMicMuted(false);
+  };
+
+  const holdTalkEnd = () => {
+    if (!clientRef.current) return;
+    setIsMuted(true);
+    clientRef.current.setMicMuted(true);
+  };
+
+  const switchListenMode = () => {
+    const next = listenMode === 'push' ? 'open' : 'push';
+    listenModeRef.current = next;
+    setListenMode(next);
+    try {
+      localStorage.setItem('iza-listen-mode', next);
+    } catch {
+      /* storage unavailable: setting applies for this session only */
+    }
+    if (clientRef.current) {
+      const muted = next === 'push';
+      setIsMuted(muted);
+      clientRef.current.setMicMuted(muted);
+    }
+  };
 
   const toggleMute = () => {
     if (!clientRef.current) return;
@@ -610,16 +651,43 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
 
           {/* Action buttons */}
           <div className="flex items-center justify-between text-xs pt-1">
-            <button 
-              onClick={toggleMute}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-colors cursor-pointer ${
-                isMuted 
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' 
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-              }`}
+            {listenMode === 'push' ? (
+              <button
+                onPointerDown={holdTalkStart}
+                onPointerUp={holdTalkEnd}
+                onPointerLeave={holdTalkEnd}
+                onPointerCancel={holdTalkEnd}
+                onContextMenu={(e) => e.preventDefault()}
+                disabled={sessionStatus === 'disconnected' || sessionStatus === 'connecting'}
+                aria-pressed={!isMuted}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border select-none touch-none transition-colors disabled:opacity-40 ${
+                  !isMuted
+                    ? 'bg-emerald-600 text-white border-emerald-500'
+                    : 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'
+                }`}
+              >
+                {isMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                <span>{isMuted ? 'HOLD TO TALK' : 'TALKING…'}</span>
+              </button>
+            ) : (
+              <button
+                onClick={toggleMute}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-colors cursor-pointer ${
+                  isMuted
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                }`}
+              >
+                {isMuted ? <MicOff className="w-3.5 h-3.5 text-amber-400" /> : <Mic className="w-3.5 h-3.5 text-emerald-400" />}
+                <span>{isMuted ? 'UNMUTE MIC' : 'MUTE MIC'}</span>
+              </button>
+            )}
+
+            <button
+              onClick={switchListenMode}
+              className="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-lg border border-slate-700 transition cursor-pointer text-[10px]"
             >
-              {isMuted ? <MicOff className="w-3.5 h-3.5 text-amber-400" /> : <Mic className="w-3.5 h-3.5 text-emerald-400" />}
-              <span>{isMuted ? 'UNMUTE MIC' : 'MUTE MIC'}</span>
+              {listenMode === 'push' ? 'PUSH TO TALK · SWITCH TO OPEN MIC' : 'OPEN MIC · SWITCH TO PUSH TO TALK'}
             </button>
 
             <div className="text-[10px] text-slate-500 flex items-center gap-2">
