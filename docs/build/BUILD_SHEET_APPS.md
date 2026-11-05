@@ -90,6 +90,37 @@ Part B is copied from the cheat sheet. The repo does not fully match it:
 
 Copied from IZA_BUILD_CHEATSHEET.md. Read Section 8 above first: some statements here do not match the current repo.
 
+
+## 1. System Overview & Trinitarian Architecture (restored verbatim from IZA_BUILD_CHEATSHEET.md)
+
+## 1. System Overview & Trinitarian Architecture
+
+IZA operates across three closed sovereign loops designed to protect cognitive sovereignty, harvest ambient energy, and provide un-rewritable personal continuity:
+
+```
+                          ┌─────────────────────────────────────┐
+                          │            IZA MASTER UI            │
+                          │   Human Sovereignty Control Center  │
+                          └──────────────────┬──────────────────┘
+                                             │
+        ┌────────────────────────────────────┼────────────────────────────────────┐
+        ▼                                    ▼                                    ▼
+ ┌───────────────┐                    ┌──────────────┐                    ┌───────────────┐
+ │   LOOP 1:     │                    │   LOOP 2:    │                    │   LOOP 3:     │
+ │ Internal Loop │                    │ Ambient Loop │                    │Execution Loop │
+ └───────┬───────┘                    └──────┬───────┘                    └───────┬───────┘
+         │                                   │                                    │
+  Biophysical Engine                  Interpersonal Zen                   Sovereign Vault &
+  • ORR Oxygen Reduction              • Tone profiling                    • 6-table relational
+  • TEG Thermoelectric                • Narrative defense                   Postgres + pgvector
+  • TENG Kinetic                      • Integrity warning                 • Continuity secrets
+  • Live telemetry (BPM,              • Audio telemetry stream            • Trusted circle &
+    power, stress)                                                          emergency SOS
+```
+
+---
+
+
 ## 2. Infrastructure & Environment Specifications
 
 | Component | Technology | Configuration / Port |
