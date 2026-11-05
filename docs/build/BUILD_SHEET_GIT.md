@@ -1,3 +1,5 @@
+Owner: Gerard
+
 # IZA — Git Build Sheet
 
 Repo: https://github.com/Ohh-iamG/iza

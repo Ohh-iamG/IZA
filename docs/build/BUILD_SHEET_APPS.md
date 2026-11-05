@@ -1,3 +1,5 @@
+Owner: Gerard
+
 # IZA — App Build Sheet (Web, Android, iOS)
 
 App ID: `com.earthi.iza`
