@@ -1,0 +1,9 @@
+.env
+*.izax
+*.json.export
+backups/
+emergency_card.txt
+visit_prep.txt
+__pycache__/
+.pytest_cache/
+*.log
