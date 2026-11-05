@@ -93,8 +93,6 @@ Copied from IZA_BUILD_CHEATSHEET.md. Read Section 8 above first: some statements
 
 ## 1. System Overview & Trinitarian Architecture
 
-## 1. System Overview & Trinitarian Architecture
-
 IZA operates across three closed sovereign loops designed to protect cognitive sovereignty, harvest ambient energy, and provide un-rewritable personal continuity:
 
 ```
