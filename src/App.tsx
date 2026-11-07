@@ -55,6 +55,7 @@ import { PWAInstallButton } from './components/pwa/PWAInstallButton';
 import { OfflineIndicator } from './components/pwa/OfflineIndicator';
 import { PushNotificationManager } from './components/pwa/PushNotificationManager';
 import { SettingsPrivacyModal } from './components/SettingsPrivacyModal';
+import { GeminiPlatformSuiteModal } from './components/GeminiPlatformSuiteModal';
 import { MedicalDisclaimerModal } from './components/MedicalDisclaimerModal';
 import { WebAgentWidget } from './components/WebAgentWidget';
 import { SovereignStatusBar } from './components/SovereignStatusBar';
@@ -77,6 +78,7 @@ import { LifeThreadModal } from './components/life/LifeThreadModal';
 import { MomentDetailModal } from './components/life/MomentDetailModal';
 import { VisualDeletionConfirmationModal } from './components/life/VisualDeletionConfirmationModal';
 import { ApiAgentsDashboard } from './components/ApiAgentsDashboard';
+import { EarlyAccessLandingModal } from './components/life/EarlyAccessLandingModal';
 
 export default function App() {
   const [time, setTime] = useState(new Date());
@@ -161,10 +163,12 @@ export default function App() {
   const [isEnriching, setIsEnriching] = useState(false);
   const [enrichStatus, setEnrichStatus] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [geminiSuiteOpen, setGeminiSuiteOpen] = useState(false);
   const [webAgentOpen, setWebAgentOpen] = useState(false);
   const [spatialMemoryOpen, setSpatialMemoryOpen] = useState(false);
   const [universalSearchOpen, setUniversalSearchOpen] = useState(false);
   const [ritualsOpen, setRitualsOpen] = useState(false);
+  const [earlyAccessOpen, setEarlyAccessOpen] = useState(false);
   const [medicalDisclaimerOpen, setMedicalDisclaimerOpen] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('iza_disclaimer_accepted') !== 'true';
@@ -702,7 +706,7 @@ export default function App() {
             <div className="flex items-center gap-2.5">
               <img 
                 src="/assets/aistudio/iza_brand_mark.png" 
-                alt="IZA" 
+                alt="IZA LIFE branding logo - premium minimalist typography layout with glowing aqua emphasis representing digital sovereignty" 
                 className="h-8 sm:h-9 w-auto object-contain select-none" 
               />
               <span className="text-xs font-semibold tracking-wider text-[#F3F6F5] uppercase border-l border-[#303737] pl-2.5 font-sans">
@@ -715,6 +719,15 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setEarlyAccessOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#151E21] hover:bg-[#1D2A2D] text-[#71F5DB] border border-[#71F5DB]/40 text-xs font-mono font-medium transition cursor-pointer"
+              title="Early Access Showcase & Waitlist"
+            >
+              <Sparkles className="w-3 h-3 text-[#71F5DB]" />
+              <span className="hidden sm:inline">Early Access</span>
+            </button>
+
             <button
               onClick={() => setIsHotwordActive(!isHotwordActive)}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
@@ -744,6 +757,15 @@ export default function App() {
             >
               <Cpu className="w-3.5 h-3.5 text-[#71F5DB]" />
               <span className="hidden sm:inline">API & Agents</span>
+            </button>
+
+            <button
+              onClick={() => setGeminiSuiteOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#151E21] hover:bg-[#1D2A2D] border border-[#303737] hover:border-[#71F5DB] text-[#96A3A1] hover:text-[#F3F6F5] text-xs font-medium transition-colors cursor-pointer"
+              title="Gemini Platform Suite: Files API, Voices & TTS, Caching, Tokens, Embeddings & File Search"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#71F5DB]" />
+              <span className="hidden sm:inline">Gemini Suite</span>
             </button>
 
             <button
@@ -874,10 +896,22 @@ export default function App() {
           }}
         />
 
+        {/* Gemini Platform API Suite Modal */}
+        <GeminiPlatformSuiteModal
+          isOpen={geminiSuiteOpen}
+          onClose={() => setGeminiSuiteOpen(false)}
+        />
+
         {/* Health Disclaimer */}
         <MedicalDisclaimerModal
           isOpen={medicalDisclaimerOpen}
           onClose={() => setMedicalDisclaimerOpen(false)}
+        />
+
+        {/* Early Access Showcase & Waitlist Modal */}
+        <EarlyAccessLandingModal
+          isOpen={earlyAccessOpen}
+          onClose={() => setEarlyAccessOpen(false)}
         />
 
         {/* Visual Deletion Confirmation Intercept Modal (Reviewer & Compliance) */}
@@ -1987,6 +2021,13 @@ export default function App() {
           ]);
         }}
         onOpenDisclaimer={() => setMedicalDisclaimerOpen(true)}
+        onOpenGeminiSuite={() => setGeminiSuiteOpen(true)}
+      />
+
+      {/* Gemini Platform API Suite Modal */}
+      <GeminiPlatformSuiteModal
+        isOpen={geminiSuiteOpen}
+        onClose={() => setGeminiSuiteOpen(false)}
       />
 
       {/* Health & Medical Disclaimer Modal (Guideline 1.4) */}

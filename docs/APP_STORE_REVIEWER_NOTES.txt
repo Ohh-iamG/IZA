@@ -1,0 +1,57 @@
+APP REVIEWER NOTES — INTEGRATED COMPLIANCE & ACCESSIBILITY MATRIX
+
+APPLICATION IDENTIFIER: IZA LIFE
+VERSION SUBMITTING: 1.0.0
+BUILD TARGET STATUS: USER-INITIATED REACTIVE ARCHITECTURE
+
+--------------------------------------------------------------------------------
+1. MANDATORY REVIEWER AUTHENTICATION & ACCESS TOKENS
+--------------------------------------------------------------------------------
+To fully verify the operational endpoints and multi-modal sandbox pipelines of IZA LIFE without data collisions, please utilize the dedicated reviewer testing profile credentials below:
+
+• TEST USERNAME / EMAIL: review-tester@izalife.app
+• TEST SECURE PASSWORD:  ReviewValid2026!
+• SECURE VAULT PASSPHRASE: SovereignRecall2026
+
+*Note on Local Cryptographic Verification: The Vault Passphrase is utilized entirely on-device by local key stretching scripts (Argon2id/PBKDF2) to compute the AES-256-GCM keys. It cannot be reset or verified by our server database. Please enter the passphrase exactly as typed above to inspect the 'Vault' asset grid.*
+
+--------------------------------------------------------------------------------
+2. COMPLIANCE & APP SCOPE DECLARATION (GUIDELINES 2.5.4, 2.5.19 & 5.1.1)
+--------------------------------------------------------------------------------
+• COVERT TRACKING PROHIBITION SAFEGUARD: IZA LIFE is strictly an on-demand, user-initiated personal wellness, journaling, and memory recall companion. The application contains NO continuous background listening loops, NO automated telemetry tracker logs, and NO proactive welfare or diagnostic monitoring systems. 
+
+• HARDWARE INTERACTION COMPLIANCE: The application processes voice captures ("Talk") and multimedia documents ("See", "Add") exclusively when the user interacts explicitly with a front-end touch control. 
+
+• REACTIONARY BACKEND: Data collection behaves strictly on a reactive model. For example, if a user logs an entry regarding routines, it is categorized locally inside their private timeline for personal recall. No proactive tracking or cross-account shared indexing is executed.
+
+--------------------------------------------------------------------------------
+3. STEP-BY-STEP TESTING WORKFLOW FOR APP STORE REVIEWERS
+--------------------------------------------------------------------------------
+
+STEP A: VERIFY USER-INITIATED SYSTEM ACCESS TOKENS (THE "+" CAPTURE PIPELINE)
+1. Initialize the app and authenticate using the credentials provided in Section 1.
+2. From the core navigation layout, tap the central aqua "+" control icon.
+3. Observe that the current background view shifts cleanly behind a soft system blur, while the capture menu panel stays interactive above the frame.
+4. Select the "Talk" or "See" row elements. This will trigger the native OS microphone/camera authorization prompts.
+5. Review the descriptive strings inside the prompt callout box. They explicitly confirm that system sensors operate strictly on-demand for manual captures, satisfying Guideline 5.1.1 data use clarity.
+
+STEP B: TESTING RECALL SEMANTIC VECTOR ENGINE MODES
+1. Navigate to the "RECALL" tab using the bottom controls.
+2. Select the input query line and type a conversational search expression (e.g., "Show me my travel insurance policy").
+3. The UI queries the localized vector layer (pgvector similarity syncs) and returns the corresponding citable user moment file in the Shared Detail view.
+
+STEP C: TESTING ZERO-KNOWLEDGE ENCRYPTION & DELETION INTERCEPTS
+1. Navigate to the "ME" settings layout on the navigation bar.
+2. Select the "Vault" library category.
+3. Input the required encryption key passphrase: SovereignRecall2026
+4. Once the local key derivation loop executes, the encrypted schema objects will cleanly render on screen.
+5. Select an object and execute an erasure or forget command.
+6. Note that a physical slider/visual dialogue overlay intercepts the event immediately. This requires manual confirmation before allowing a cascading deletion across database tables, ensuring safety from destructive voice command errors.
+
+--------------------------------------------------------------------------------
+4. CRITICAL PRIVACY & ACCOUNT REMOVAL COMPLIANCE
+--------------------------------------------------------------------------------
+• COMPLETE DELETION CORE: Users can trigger a total profile wipe from the Privacy settings path inside the ME tab. This initiates an immediate cascading database execution, wiping all data links, text content, multi-modal file attachments, and vector embeddings from both the server storage layers and the local device cache (IndexedDB).
+• ZERO THIRD-PARTY RUNTIMES: This app utilizes no external marketing analytics SDKs, advertising engines, or background canvas monitoring software.
+
+For immediate live engineering support or alternative compliance data streams during the active verification queue, please ping the server nodes directly at: support@izalife.app

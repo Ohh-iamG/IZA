@@ -127,11 +127,16 @@ export async function signInWithApple(): Promise<User | null> {
 
 export function signInAsDemoReviewer(): { uid: string; email: string; displayName: string } {
   const demoUser = {
-    uid: 'demo_reviewer_earthi',
-    email: 'test-reviewer@earthi.ltd',
-    displayName: 'App Store Reviewer (Earthi)',
+    uid: 'demo_reviewer_izalife',
+    email: 'review-tester@izalife.app',
+    displayName: 'App Store Reviewer (IZA LIFE)',
   };
   localStorage.setItem('iza_demo_reviewer_session', JSON.stringify(demoUser));
+  // Pre-seed the test vault passphrase if not already initialized
+  if (!localStorage.getItem('iza_vault_passphrase')) {
+    localStorage.setItem('iza_vault_passphrase', 'SovereignRecall2026');
+    localStorage.setItem('iza_vault_passphrase_configured', 'true');
+  }
   return demoUser;
 }
 
@@ -143,13 +148,19 @@ export async function saveUserProfile(user: User): Promise<void> {
   const userPath = `users/${user.uid}`;
   try {
     const ref = doc(db, 'users', user.uid);
+    const email = (user.email || '').trim().slice(0, 256);
+    const displayName = (user.displayName || user.email?.split('@')[0] || 'Sovereign Owner').trim().slice(0, 256);
+    const photoURL = (user.photoURL || '').trim().slice(0, 2048);
+    const createdAt = (user.metadata.creationTime || new Date().toISOString()).slice(0, 128);
+    const updatedAt = new Date().toISOString().slice(0, 128);
+
     await setDoc(ref, {
       uid: user.uid,
-      email: user.email || '',
-      displayName: user.displayName || user.email?.split('@')[0] || 'Sovereign Owner',
-      photoURL: user.photoURL || '',
-      updatedAt: new Date().toISOString(),
-      createdAt: user.metadata.creationTime || new Date().toISOString()
+      email: email || `${user.uid}@auth.local`,
+      displayName,
+      photoURL,
+      updatedAt,
+      createdAt
     }, { merge: true });
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, userPath);

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service &amp; Health Boundaries | IZA LIFE</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1a1a1c;
+            --accent-color: #00E5FF;
+            --text-primary: #FFFFFF;
+            --text-secondary: #9E9E9E;
+            --border-color: #2C2C2E;
+            --alert-color: #FF5252;
+            --warning-color: #FFB300;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--text-primary);
+            text-transform: uppercase;
+        }
+
+        .logo span {
+            color: var(--accent-color);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .meta-date {
+            color: var(--accent-color);
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 40px;
+            margin-bottom: 16px;
+            border-left: 3px solid var(--accent-color);
+            padding-left: 12px;
+        }
+
+        p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-bottom: 25px;
+        }
+
+        li {
+            position: relative;
+            padding-left: 24px;
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        li::before {
+            content: "•";
+            position: absolute;
+            left: 6px;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 30px 0;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .card-alert h3 {
+            color: var(--alert-color);
+        }
+
+        .card-accent h3 {
+            color: var(--accent-color);
+        }
+
+        .card-warning h3 {
+            color: var(--warning-color);
+        }
+
+        .card p:last-child {
+            margin-bottom: 0;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 13px;
+            color: #555;
+        }
+
+        a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">IZA <span>LIFE</span></div>
+            <h1>Terms of Service &amp; Health Boundaries</h1>
+            <div class="meta-date">Effective Date: 6 November 2026 · Jurisdiction: Western Australia</div>
+        </header>
+
+        <main>
+            <p>Welcome to IZA LIFE. By accessing, downloading, or registering an account within the IZA LIFE platform, you agree to be bound by these Terms of Service. These terms define the structural boundaries, legal limits, and consumer protections governing your use of our sovereign personal companion software.</p>
+
+            <div class="card card-alert">
+                <h3>⚠️ MANDATORY STATUTORY MEDICAL DISCLAIMER (APP STORE GUIDELINE 1.4)</h3>
+                <p><strong>Non-Diagnostic &amp; Non-Clinical Tooling Status:</strong> IZA LIFE is exclusively an automated personal memory care, wellness journaling, and episodic self-reflection assistant. It is NOT a medical device, licensed healthcare provider, clinical diagnostic tool, or emergency crisis dispatch system.</p>
+                <p>Never rely on IZA LIFE for medical diagnoses, medication changes, or emergency medical guidance. Always consult a certified healthcare professional for medical concerns. In an acute medical or psychological emergency, contact emergency emergency services (000 in Australia, 911 in North America, 112 in the EU) immediately.</p>
+            </div>
+
+            <h2>1. No Proactive Welfare Monitoring Liability</h2>
+            <div class="card card-warning">
+                <h3>🛡️ NO ACTIVE SAFETY MONITORING OBLIGATION</h3>
+                <p><strong>Absence of Ambient Welfare Monitoring:</strong> The application does not monitor your live physical location, continuous biophysical baseline, or physical safety in real time. Missed daily routines, medication logs, or check-in prompts do NOT trigger automated third-party welfare checks, emergency responder dispatches, or medical escalation protocols.</p>
+                <p>You acknowledge and agree that IZA LIFE owes no legal duty of care to act as an active safety watcher, emergency monitor, or welfare warden.</p>
+            </div>
+
+            <h2>2. User Agency &amp; Cryptographic Sovereignty</h2>
+            <p>IZA LIFE operates on a strict zero-knowledge cryptographic boundary:</p>
+            <ul>
+                <li><strong>Local Passphrase Responsibility:</strong> Data held within the Continuity Vault is encrypted client-side using AES-256-GCM and derived via Argon2id / PBKDF2 local key-stretching functions. IZA LIFE does NOT hold, synchronize, or possess the cryptographic capability to decrypt your Vault passphrase.</li>
+                <li><strong>Irrecoverable Loss Notice:</strong> If you lose or forget your local Vault passphrase, your encrypted vault data CANNOT be recovered or restored by our engineering staff. You retain full sovereign custody over your signature keys.</li>
+            </ul>
+
+            <h2>3. Permitted Use &amp; Intellectual Property</h2>
+            <p>Subject to these terms, EARTH-I grants you a personal, non-exclusive, revocable, non-transferable license to utilize the application on compatible devices solely for your private, non-commercial journaling and memory retention purposes.</p>
+            <ul>
+                <li>You agree not to reverse engineer, decompile, or attempt to extract source algorithms from the binary compiled applets.</li>
+                <li>You agree not to utilize automated web-scrapers, spiders, or extraction bots against our server nodes.</li>
+            </ul>
+
+            <h2>4. Australian Consumer Law (ACL) Guarantees</h2>
+            <p>Under the Australian Consumer Law (Schedule 2 of the Competition and Consumer Act 2010), our services come with statutory consumer guarantees that cannot be excluded by contract. Nothing in these Terms limits or modifies any non-excludable consumer rights or remedies available under Australian law.</p>
+
+            <h2>5. Account Deletion &amp; Data Erasure</h2>
+            <p>In accordance with the Western Australia Surveillance Devices Act 1998 and modern digital sovereignty standards, you may permanently terminate your account and erase all stored records at any time from the in-app ME → Settings &amp; Privacy menu. All database links, vector embeddings, and cloud assets are permanently purged upon confirmation.</p>
+
+            <h2>6. Contact &amp; Governance</h2>
+            <p>
+                <strong>Operating Entity:</strong> EARTH-I (ABN 15 698 220 692)<br>
+                <strong>Legal &amp; Compliance Inquiries:</strong> <a href="mailto:privacy@izalife.app">privacy@izalife.app</a><br>
+                <strong>Engineering Support:</strong> <a href="mailto:support@izalife.app">support@izalife.app</a><br>
+                <strong>Public Ecosystem:</strong> <a href="https://izalife.app" target="_blank">https://izalife.app</a>
+            </p>
+        </main>
+
+        <footer>
+            &copy; 2026 IZA LIFE · EARTH-I ABN 15 698 220 692. All rights reserved.
+        </footer>
+    </div>
+</body>
+</html>

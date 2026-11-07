@@ -1,0 +1,23 @@
+{
+  "agent_id": "iza.filing",
+  "name": "IZA Filing Agent",
+  "version": "1.0.0",
+  "schema_version": "1.0",
+  "status": "active",
+  "owner": "IZA",
+  "agent_type": "specialist",
+  "memory_access": "scoped",
+  "memory_write": "controlled",
+  "time_horizons": [
+    "now",
+    "session",
+    "daily",
+    "weekly",
+    "monthly",
+    "yearly",
+    "lifetime"
+  ],
+  "requires_consent_engine": true,
+  "requires_confidence_engine": true,
+  "created_at": "2026-11-07T00:00:00Z"
+}

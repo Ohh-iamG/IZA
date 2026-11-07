@@ -11,6 +11,7 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "test:vault": "tsx --test src/tests/vault-crypto.test.ts",
+    "test:memory": "tsx --test src/tests/memory-consent.test.ts",
     "postinstall": "node scripts/patch-vite.mjs",
     "cap:build": "npm run build && cap sync",
     "cap:sync": "cap sync",

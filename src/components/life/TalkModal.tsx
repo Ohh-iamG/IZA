@@ -70,13 +70,34 @@ export const TalkModal: React.FC<TalkModalProps> = ({
       setMessages(prev => [...prev, { role: 'model', text: reply }]);
       onMomentSaved?.(text);
 
-      if (ttsEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      if (ttsEnabled) {
         try {
-          const utterance = new SpeechSynthesisUtterance(reply);
-          utterance.rate = 1.0;
-          utterance.pitch = 1.0;
-          window.speechSynthesis.speak(utterance);
-        } catch (_) {}
+          const ttsRes = await fetch('/api/gemini/tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              text: reply,
+              voice: 'Kore',
+              model: 'gemini-3.8-flash-lite-tts',
+              style: 'warm, calm and articulate sovereign companion'
+            })
+          });
+          const ttsData = await ttsRes.json();
+          if (ttsData.audio) {
+            const audio = new Audio(`data:audio/wav;base64,${ttsData.audio}`);
+            audio.play().catch(() => {});
+          } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(reply);
+            window.speechSynthesis.speak(utterance);
+          }
+        } catch (_) {
+          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            try {
+              const utterance = new SpeechSynthesisUtterance(reply);
+              window.speechSynthesis.speak(utterance);
+            } catch (e) {}
+          }
+        }
       }
     } catch (err) {
       console.error('Chat error:', err);

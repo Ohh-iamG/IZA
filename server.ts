@@ -3,6 +3,7 @@ import { adminAuth } from './src/lib/firebase-admin.ts';
 import express from 'express';
 import http from 'http';
 import path from 'path';
+import os from 'os';
 import multer from 'multer';
 import { WebSocketServer, WebSocket } from 'ws';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
@@ -698,10 +699,11 @@ Format response as JSON with fields: summary, priorities (array of strings).`;
     }
 
     const medStatus = `${meds.rows.length} Active Items`;
+    const pulseId = crypto.randomUUID ? crypto.randomUUID() : `pulse_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const inserted = await pool.query(
-      `INSERT INTO daily_pulse (pulse_date, summary, priorities, med_status) 
-       VALUES (CURRENT_DATE, $1, $2, $3) RETURNING *`,
-      [parsed.summary, parsed.priorities || [], medStatus]
+      `INSERT INTO daily_pulse (id, pulse_date, summary, priorities, med_status) 
+       VALUES ($1, CURRENT_DATE, $2, $3, $4) RETURNING *`,
+      [pulseId, parsed.summary, parsed.priorities || [], medStatus]
     );
 
     return res.json(inserted.rows[0]);
@@ -1829,6 +1831,332 @@ if (portArgIndex !== -1 && process.argv[portArgIndex + 1]) {
 } else if (process.env.PORT) {
   port = parseInt(process.env.PORT, 10) || 3000;
 }
+
+// Public Legal Endpoints for Store Compliance & Verification
+app.get(['/privacy', '/privacy.html'], (_req, res) => {
+  res.sendFile(path.resolve('public', 'privacy.html'));
+});
+
+app.get(['/terms', '/terms.html'], (_req, res) => {
+  res.sendFile(path.resolve('public', 'terms.html'));
+});
+
+// ============================================================================
+// GEMINI PLATFORM API SUITE (Files, Caching, Voices/TTS, Batches, Embeddings, Tokens, File Search)
+// ============================================================================
+
+// 1. Files API (POST /v1beta/files, GET /v1beta/files, DELETE /v1beta/files/{file})
+app.get('/api/gemini/files', async (_req, res) => {
+  const ai = getGeminiClient();
+  if (!ai) return res.status(503).json({ error: 'Gemini client not initialized' });
+  try {
+    const filePager = await ai.files.list();
+    const files = Array.isArray(filePager.page) ? filePager.page : [];
+    return res.json({ files });
+  } catch (err: any) {
+    console.error('Gemini Files list error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to list Gemini files' });
+  }
+});
+
+app.post('/api/gemini/files/upload', upload.single('file'), async (req: express.Request, res: express.Response) => {
+  const ai = getGeminiClient();
+  if (!ai) return res.status(503).json({ error: 'Gemini client not initialized' });
+  if (!req.file) return res.status(400).json({ error: 'No file provided in request' });
+
+  const tempDir = os.tmpdir();
+  const tempFilePath = path.join(tempDir, `gemini_upload_${Date.now()}_${req.file.originalname}`);
+
+  try {
+    fs.writeFileSync(tempFilePath, req.file.buffer);
+    const uploadResult = await ai.files.upload({
+      file: tempFilePath,
+      config: {
+        mimeType: req.file.mimetype || 'application/octet-stream',
+        displayName: req.body.displayName || req.file.originalname,
+      },
+    });
+
+    try { fs.unlinkSync(tempFilePath); } catch (_) {}
+    return res.json({
+      success: true,
+      file: uploadResult,
+    });
+  } catch (err: any) {
+    try { fs.unlinkSync(tempFilePath); } catch (_) {}
+    console.error('Gemini Files upload error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to upload to Gemini Files API' });
+  }
+});
+
+app.delete('/api/gemini/files/:name(*)', async (req, res) => {
+  const ai = getGeminiClient();
+  if (!ai) return res.status(503).json({ error: 'Gemini client not initialized' });
+  try {
+    const rawName = req.params.name;
+    const name = rawName.startsWith('files/') ? rawName : `files/${rawName}`;
+    await ai.files.delete({ name });
+    return res.json({ success: true, deleted: name });
+  } catch (err: any) {
+    console.error('Gemini Files delete error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to delete Gemini file' });
+  }
+});
+
+// 2. Context Caching API (POST /v1beta/cachedContents, GET /v1beta/cachedContents, DELETE)
+app.get('/api/gemini/caching', async (_req, res) => {
+  const ai = getGeminiClient();
+  if (!ai) return res.status(503).json({ error: 'Gemini client not initialized' });
+  try {
+    const cachePager = await ai.caches.list();
+    const caches = Array.isArray(cachePager.page) ? cachePager.page : [];
+    return res.json({ caches });
+  } catch (err: any) {
+    console.error('Gemini Caching list error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to list Gemini cached contents' });
+  }
+});
+
+app.post('/api/gemini/caching', async (req, res) => {
+  const ai = getGeminiClient();
+  if (!ai) return res.status(503).json({ error: 'Gemini client not initialized' });
+  try {
+    const { model = 'gemini-3.8-flash', displayName, ttl = '300s', contents, systemInstruction } = req.body;
+    const cache = await ai.caches.create({
+      model,
+      config: {
+        displayName: displayName || `cache_${Date.now()}`,
+        ttl,
+        systemInstruction: systemInstruction || undefined,
+        contents: Array.isArray(contents) ? contents : [{ role: 'user', parts: [{ text: String(contents || 'Sovereign system context') }] }],
+      },
+    });
+    return res.json({ success: true, cache });
+  } catch (err: any) {
+    console.error('Gemini Caching create error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to create cached content' });
+  }
+});
+
+app.delete('/api/gemini/caching/:name(*)', async (req, res) => {
+  const ai = getGeminiClient();
+  if (!ai) return res.status(503).json({ error: 'Gemini client not initialized' });
+  try {
+    const rawName = req.params.name;
+    const name = rawName.startsWith('cachedContents/') ? rawName : `cachedContents/${rawName}`;
+    await ai.caches.delete({ name });
+    return res.json({ success: true, deleted: name });
+  } catch (err: any) {
+    console.error('Gemini Caching delete error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to delete cached content' });
+  }
+});
+
+// 3. Voices & Speech Generation (gemini-3.8-flash-tts multi-speaker and gemini-3.8-flash-lite-tts)
+app.post('/api/gemini/tts', async (req, res) => {
+  const ai = getGeminiClient();
+  if (!ai) return res.status(503).json({ error: 'Gemini client not initialized' });
+
+  try {
+    const {
+      text,
+      turns,
+      voice = 'Kore',
+      speakers,
+      model: requestedModel,
+      format = 'json',
+      style,
+    } = req.body;
+
+    const isMultiSpeaker = Array.isArray(speakers) && speakers.length === 2;
+    const model = requestedModel || (isMultiSpeaker ? 'gemini-3.8-flash-tts' : 'gemini-3.8-flash-lite-tts');
+
+    let parts: any[] = [];
+    let speechConfig: any = {};
+
+    if (isMultiSpeaker && Array.isArray(turns) && turns.length > 0) {
+      parts = turns.map((t: any) => ({
+        text: t.speaker ? `${t.speaker}: ${t.text}` : t.text,
+        speechMetadata: (t.speaker || t.style) ? {
+          speaker: t.speaker,
+          style: t.style,
+        } : undefined,
+      }));
+
+      speechConfig = {
+        multiSpeakerVoiceConfig: {
+          speakerVoiceConfigs: speakers.map((s: any) => ({
+            speaker: s.speaker,
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: s.voice || 'Kore' },
+            },
+          })),
+        },
+      };
+    } else {
+      const singleText = text || (Array.isArray(turns) ? turns.map((t: any) => t.text).join(' ') : 'Hello from IZA');
+      parts = [
+        {
+          text: singleText,
+          speechMetadata: style ? { style } : undefined,
+        },
+      ];
+      speechConfig = {
+        voiceConfig: {
+          prebuiltVoiceConfig: { voiceName: voice || 'Kore' },
+        },
+      };
+    }
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: [
+        {
+          role: 'user',
+          parts,
+        },
+      ],
+      config: {
+        responseModalities: ['AUDIO'],
+        speechConfig,
+      },
+    });
+
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!base64Audio) {
+      throw new Error('No audio returned by Gemini TTS model');
+    }
+
+    if (format === 'audio') {
+      const wavBuffer = Buffer.from(base64Audio, 'base64');
+      res.setHeader('Content-Type', 'audio/wav');
+      res.setHeader('Content-Length', wavBuffer.length);
+      return res.send(wavBuffer);
+    }
+
+    return res.json({
+      success: true,
+      model,
+      audio: base64Audio,
+      mimeType: 'audio/wav',
+      sampleRate: 24000,
+    });
+  } catch (err: any) {
+    console.error('Gemini TTS error:', err);
+    return res.status(500).json({ error: err.message || 'Speech synthesis failed' });
+  }
+});
+
+// 4. Batch API (POST /v1beta/batches, GET /v1beta/batches)
+app.get('/api/gemini/batches', async (_req, res) => {
+  const ai = getGeminiClient();
+  if (!ai) return res.status(503).json({ error: 'Gemini client not initialized' });
+  try {
+    const batchPager = await ai.batches.list();
+    const batches = Array.isArray(batchPager.page) ? batchPager.page : [];
+    return res.json({ batches });
+  } catch (err: any) {
+    console.error('Gemini Batches list error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to list batch jobs' });
+  }
+});
+
+app.post('/api/gemini/batches', async (req, res) => {
+  const ai = getGeminiClient();
+  if (!ai) return res.status(503).json({ error: 'Gemini client not initialized' });
+  try {
+    const { model = 'gemini-3.8-flash', displayName } = req.body;
+    const batch = await ai.batches.create({
+      model,
+      config: { displayName: displayName || `batch_${Date.now()}` },
+      ...req.body,
+    });
+    return res.json({ success: true, batch });
+  } catch (err: any) {
+    console.error('Gemini Batches create error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to create batch job' });
+  }
+});
+
+// 5. Embeddings API (POST /v1beta/models/{model}:embedContent)
+app.post('/api/gemini/embeddings', async (req, res) => {
+  const ai = getGeminiClient();
+  if (!ai) return res.status(503).json({ error: 'Gemini client not initialized' });
+  try {
+    const { text, texts, model = 'gemini-embedding-2-preview' } = req.body;
+    const contentsToEmbed = Array.isArray(texts) ? texts : [text || 'Sovereign human memory'];
+    const result = await ai.models.embedContent({
+      model,
+      contents: contentsToEmbed,
+    });
+    return res.json({
+      success: true,
+      model,
+      embeddings: result.embeddings || [],
+    });
+  } catch (err: any) {
+    console.error('Gemini Embeddings error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to generate vector embeddings' });
+  }
+});
+
+// 6. Tokens Counter API (POST /v1beta/models/{model}:countTokens)
+app.post('/api/gemini/tokens/count', async (req, res) => {
+  const ai = getGeminiClient();
+  if (!ai) return res.status(503).json({ error: 'Gemini client not initialized' });
+  try {
+    const { text, contents, model = 'gemini-3.8-flash' } = req.body;
+    const targetContents = contents || text || '';
+    const countResult = await ai.models.countTokens({
+      model,
+      contents: targetContents,
+    });
+    return res.json({
+      success: true,
+      model,
+      totalTokens: countResult.totalTokens ?? 0,
+      cachedContentTokenCount: countResult.cachedContentTokenCount ?? 0,
+    });
+  } catch (err: any) {
+    console.error('Gemini Token Count error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to count tokens' });
+  }
+});
+
+// 7. File Search / Retrieval Grounding API (POST /v1beta/fileSearchStores)
+app.post('/api/gemini/file-search', async (req, res) => {
+  const ai = getGeminiClient();
+  if (!ai) return res.status(503).json({ error: 'Gemini client not initialized' });
+  try {
+    const { query, fileUris = [], prompt } = req.body;
+    const parts: any[] = [];
+    for (const uri of fileUris) {
+      parts.push({
+        fileData: {
+          fileUri: uri,
+          mimeType: 'application/pdf',
+        },
+      });
+    }
+    parts.push({
+      text: prompt || `Search and ground your answer strictly based on the provided documents. Query: "${query}"`,
+    });
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: [{ role: 'user', parts }],
+    });
+
+    return res.json({
+      success: true,
+      query,
+      answer: response.text || '',
+    });
+  } catch (err: any) {
+    console.error('Gemini File Search error:', err);
+    return res.status(500).json({ error: err.message || 'File Search grounding failed' });
+  }
+});
 
 async function startServer() {
   if (process.env.NODE_ENV === 'production') {

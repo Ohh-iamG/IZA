@@ -28,6 +28,7 @@ interface SettingsPrivacyModalProps {
   onUserChange: (user: any) => void;
   onDataPurged: () => void;
   onOpenDisclaimer: () => void;
+  onOpenGeminiSuite?: () => void;
 }
 
 export function SettingsPrivacyModal({
@@ -36,7 +37,8 @@ export function SettingsPrivacyModal({
   currentUser,
   onUserChange,
   onDataPurged,
-  onOpenDisclaimer
+  onOpenDisclaimer,
+  onOpenGeminiSuite
 }: SettingsPrivacyModalProps) {
   const [subState, setSubState] = useState<SubscriptionState | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -91,7 +93,7 @@ export function SettingsPrivacyModal({
   const handleDemoReviewerLogin = async () => {
     const demoUser = signInAsDemoReviewer();
     onUserChange(demoUser);
-    setStatusNotice('Logged in as Store Reviewer (test-reviewer@earthi.ltd). All Pro features unlocked.');
+    setStatusNotice('Logged in as Store Reviewer (review-tester@izalife.app). All Sovereign features unlocked.');
     const updated = await purchases.getSubscriptionStatus(demoUser.email);
     setSubState(updated);
   };
@@ -311,6 +313,35 @@ export function SettingsPrivacyModal({
               </button>
             </div>
           </div>
+
+          {/* Section 4.5: Gemini Platform API Suite & Developer Tools */}
+          {onOpenGeminiSuite && (
+            <div className="p-3.5 bg-[#0B1012] rounded-xl border border-[#71F5DB]/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-[#71F5DB] font-bold text-xs uppercase">
+                  <Sparkles className="w-4 h-4" />
+                  <span>GEMINI PLATFORM API SUITE</span>
+                </div>
+                <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#71F5DB]/20 text-[#71F5DB] font-bold">
+                  @google/genai
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 font-sans leading-relaxed">
+                Test and inspect native endpoints for Files API, Voices &amp; Multi-Speaker TTS, Context Caching, Token Counter, Embeddings, Batches, and File Search.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenGeminiSuite();
+                }}
+                className="w-full py-2 bg-[#151E21] hover:bg-[#1f2b2f] border border-[#71F5DB]/50 text-[#71F5DB] font-bold rounded-lg text-xs tracking-wider transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>LAUNCH GEMINI PLATFORM SUITE</span>
+              </button>
+            </div>
+          )}
 
           {/* Section 5: Account Deletion (Store Requirement) */}
           <div className="p-4 bg-red-950/30 rounded-xl border border-red-500/40 space-y-3">

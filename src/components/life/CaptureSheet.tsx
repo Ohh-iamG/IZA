@@ -273,7 +273,7 @@ export const CaptureSheet: React.FC<CaptureSheetProps> = ({
           <div className="flex items-center gap-2.5">
             <img 
               src="/assets/aistudio/iza_brand_mark.png" 
-              alt="IZA" 
+              alt="Sleek dark-mode mobile device mockup showing the IZA LIFE capture interface with interactive on-demand options for Talk, See, Write, and Add" 
               className="h-6 w-auto object-contain select-none" 
             />
             <div>

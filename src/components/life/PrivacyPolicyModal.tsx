@@ -190,10 +190,21 @@ export function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyModalProps)
         </div>
 
         {/* Footer */}
-        <div className="pt-4 border-t border-[#1D2A2D] flex items-center justify-between text-xs">
-          <span className="text-[#96A3A1] font-mono text-[11px]">
-            © 2026 IZA LIFE · EARTH-I ABN 15 698 220 692
-          </span>
+        <div className="pt-4 border-t border-[#1D2A2D] flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <span className="text-[#96A3A1] font-mono text-[11px]">
+              © 2026 IZA LIFE · EARTH-I ABN 15 698 220 692
+            </span>
+            <a 
+              href="/privacy.html" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-1 text-[#71F5DB] hover:underline font-mono text-[11px]"
+            >
+              <ExternalLink className="w-3 h-3" />
+              <span>Web HTML</span>
+            </a>
+          </div>
           <button
             onClick={onClose}
             className="px-5 py-2 rounded-full bg-[#71F5DB] hover:bg-[#5ae6cb] text-[#06201B] font-semibold text-xs transition cursor-pointer"
