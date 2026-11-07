@@ -21,7 +21,7 @@ export interface IzaLifeNavProps {
 
 type NavKey = 'home' | 'recall' | 'people' | 'me';
 
-const AQUA = '#00D1C1';
+const AQUA = '#71F5DB';
 
 export function IzaLifeNav({ onHome, onRecall, onPeople, onMe, onTalk, onSee, onAdd, onWrite }: IzaLifeNavProps) {
   const [plusOpen, setPlusOpen] = useState(false);

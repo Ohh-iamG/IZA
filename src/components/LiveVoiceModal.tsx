@@ -17,7 +17,8 @@ import {
   Maximize2,
   Scan,
   CheckCircle2,
-  Play
+  Play,
+  AlertCircle
 } from 'lucide-react';
 import { GeminiLiveClient } from '../lib/live-audio';
 
@@ -43,11 +44,12 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
   const [micNotice, setMicNotice] = useState<string | null>(null);
   const [textInput, setTextInput] = useState('');
   const [lastAnchoredNotice, setLastAnchoredNotice] = useState<string | null>(null);
+  const [anchoredMemoriesSet, setAnchoredMemoriesSet] = useState<Set<string>>(new Set());
   const [currentSentiment, setCurrentSentiment] = useState<{ stress_index: number; tone: string } | null>(null);
 
   // Mobile Web Audio Unlock State
   const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
-  const [needsTouchUnlock, setNeedsTouchUnlock] = useState(true);
+  const [needsTouchUnlock, setNeedsTouchUnlock] = useState(false);
 
   // Multimodal Camera State
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -55,6 +57,8 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
   const [cameraLoading, setCameraLoading] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [framesStreamedCount, setFramesStreamedCount] = useState(0);
+  const [dynamicOpening, setDynamicOpening] = useState<string | null>(null);
+  const [relationshipSignals, setRelationshipSignals] = useState<any>(null);
 
   const clientRef = useRef<GeminiLiveClient | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -201,6 +205,8 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
       setLastAnchoredNotice(null);
       setCurrentSentiment(null);
       setFramesStreamedCount(0);
+      setDynamicOpening(null);
+      setRelationshipSignals(null);
       return;
     }
 
@@ -246,6 +252,7 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
       },
       onMemoryAnchored: (mem) => {
         setLastAnchoredNotice(mem.content);
+        setAnchoredMemoriesSet((prev) => new Set(prev).add(mem.content.trim()));
         if (onLogMemory) {
           onLogMemory(mem.content);
         }
@@ -261,6 +268,10 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
       },
       onVolumeChange: (vol) => {
         setInputVolume(Math.min(1, vol * 6));
+      },
+      onDynamicOpening: (opening, _isFirstEver, signals) => {
+        setDynamicOpening(opening);
+        setRelationshipSignals(signals);
       },
     });
 
@@ -297,9 +308,14 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
   };
 
   const handleSaveToVault = (text: string) => {
+    setAnchoredMemoriesSet((prev) => new Set(prev).add(text.trim()));
+    setLastAnchoredNotice(text);
     if (onLogMemory) {
       onLogMemory(text);
     }
+    setTimeout(() => {
+      setLastAnchoredNotice((current) => (current === text ? null : current));
+    }, 4000);
   };
 
   if (!isOpen) return null;
@@ -309,28 +325,36 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
       {/* Hidden canvas for video frame extraction */}
       <canvas ref={canvasRef} className="hidden" />
 
-      <div className="bg-slate-900 border border-cyan-500/50 rounded-xl w-full max-w-2xl flex flex-col shadow-[0_0_50px_rgba(6,182,212,0.25)] overflow-hidden max-h-[95vh] relative">
+      <div className="bg-slate-900 border border-[#71F5DB]/40 rounded-xl w-full max-w-2xl flex flex-col shadow-[0_0_50px_rgba(113,245,219,0.18)] overflow-hidden max-h-[95vh] relative">
         
         {/* Mobile Web Audio Tap-to-Unlock Overlay */}
         {needsTouchUnlock && !isAudioUnlocked && (
-          <div className="absolute inset-0 z-40 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
-            <div className="p-3 bg-cyan-500/10 border border-cyan-500/40 rounded-xl mb-4 text-cyan-400">
+          <div className="absolute inset-0 z-40 bg-slate-950/92 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+            <div className="p-3 bg-[#71F5DB]/10 border border-[#71F5DB]/40 rounded-xl mb-4 text-[#71F5DB]">
               <Zap className="w-8 h-8 animate-pulse" />
             </div>
             <h3 className="text-base font-bold text-slate-100 uppercase tracking-wider mb-2">
-              Mobile Audio & Live Mic Authorization
+              Microphone & Audio Activation
             </h3>
             <p className="text-xs text-slate-400 max-w-sm mb-6 leading-relaxed">
-              Mobile browsers require a single touch gesture to unlock phone speakers and establish real-time 16kHz/24kHz audio duplexing.
+              Tap below to grant microphone access and enable real-time 16kHz speech input with IZA.
             </p>
-            <button
-              onClick={handleUnlockAudio}
-              className="flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs uppercase tracking-wider rounded-lg shadow-lg shadow-cyan-500/20 active:scale-95 transition cursor-pointer"
-            >
-              <Play className="w-4 h-4 fill-current" />
-              <span>TAP TO START IZA AGENT</span>
-            </button>
-            <span className="text-[10px] text-slate-500 mt-3 font-mono">
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <button
+                onClick={handleUnlockAudio}
+                className="flex items-center gap-2 px-6 py-3 bg-[#71F5DB] hover:bg-[#5ae0c7] text-[#0D1B1E] font-bold text-xs uppercase tracking-wider rounded-lg shadow-lg shadow-[#71F5DB]/20 active:scale-95 transition cursor-pointer"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                <span>ENABLE MICROPHONE</span>
+              </button>
+              <button
+                onClick={() => setNeedsTouchUnlock(false)}
+                className="px-4 py-2.5 text-xs text-slate-400 hover:text-slate-200 transition cursor-pointer"
+              >
+                Type Instead
+              </button>
+            </div>
+            <span className="text-[10px] text-slate-500 mt-4 font-mono">
               Hardware Alignment: 16k Input • 24k Output • Zero Pitch Warp
             </span>
           </div>
@@ -339,14 +363,19 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
         {/* Modal Header */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b border-slate-800 bg-slate-900/90">
           <div className="flex items-center gap-2.5">
+            <img 
+              src="/assets/aistudio/iza_brand_mark.png" 
+              alt="IZA" 
+              className="h-6 sm:h-7 w-auto object-contain select-none" 
+            />
             <div className="relative flex h-3 w-3">
               <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                sessionStatus === 'speaking' ? 'bg-cyan-400' :
+                sessionStatus === 'speaking' ? 'bg-[#71F5DB]' :
                 sessionStatus === 'listening' ? 'bg-emerald-400' :
                 sessionStatus === 'connecting' ? 'bg-amber-400' : 'bg-slate-500'
               }`}></span>
               <span className={`relative inline-flex rounded-full h-3 w-3 ${
-                sessionStatus === 'speaking' ? 'bg-cyan-500' :
+                sessionStatus === 'speaking' ? 'bg-[#71F5DB]' :
                 sessionStatus === 'listening' ? 'bg-emerald-500' :
                 sessionStatus === 'connecting' ? 'bg-amber-500' : 'bg-slate-500'
               }`}></span>
@@ -354,12 +383,12 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
             <div>
               <div className="font-bold text-slate-100 flex items-center gap-2 text-xs sm:text-sm tracking-wide">
                 <span>GEMINI 3.8 LIVE</span>
-                <span className="text-[10px] bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 px-1.5 py-0.5 rounded">
-                  AUDIO &bull; {isCameraActive ? 'MULTIMODAL VISION' : 'DUPLEX SPEECH'}
+                <span className="text-[10px] bg-[#71F5DB]/15 text-[#71F5DB] border border-[#71F5DB]/30 px-1.5 py-0.5 rounded font-mono">
+                  {isCameraActive ? 'VISION' : 'DUPLEX'}
                 </span>
               </div>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 font-mono mt-0.5 truncate">
-                Sub-second audio link + live video stream for hands-free visual Q&A.
+              <p className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">
+                Sub-second live audio link • Sovereign continuous memory
               </p>
             </div>
           </div>
@@ -397,6 +426,27 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
             </button>
           </div>
         </div>
+
+        {/* Error Message Banner */}
+        {errorMessage && (
+          <div className="bg-amber-950/90 border-b border-amber-500/50 px-3 py-2 flex items-center justify-between text-xs text-amber-200">
+            <div className="flex items-center gap-2 truncate">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="truncate">{errorMessage}</span>
+            </div>
+            <button
+              onClick={() => {
+                setErrorMessage(null);
+                if (clientRef.current) {
+                  clientRef.current.connect().catch((e) => setErrorMessage(e.message || 'Connection failed'));
+                }
+              }}
+              className="text-[10px] text-amber-400 hover:text-amber-200 underline shrink-0 font-mono ml-2 cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         {/* Live Memory Anchoring Notice */}
         {lastAnchoredNotice && (
@@ -547,9 +597,16 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
         {/* Live Conversation Transcript Feed */}
         <div className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-2.5 min-h-[160px] max-h-[260px] bg-slate-900/60 text-xs">
           {transcriptHistory.length === 0 && (
-            <div className="text-center py-6 text-slate-500 text-xs font-sans">
-              <Sparkles className="w-5 h-5 mx-auto mb-2 text-cyan-400/60" />
-              <span>Speak out loud or enable camera to inspect physical items. IZA responds in natural audio.</span>
+            <div className="text-center py-6 text-[#96A3A1] text-xs font-sans space-y-2.5">
+              <Sparkles className="w-5 h-5 mx-auto text-[#71F5DB]/70" />
+              {dynamicOpening ? (
+                <div className="p-3.5 bg-[#151E21] border border-[#303737] rounded-2xl max-w-sm mx-auto text-[#F3F6F5] text-sm leading-relaxed shadow-sm">
+                  <p className="text-[10px] uppercase font-mono tracking-wider text-[#71F5DB] mb-1">IZA Opening</p>
+                  <p className="italic">"{dynamicOpening}"</p>
+                </div>
+              ) : (
+                <span>Speak naturally or ask about past moments. IZA responds in voice.</span>
+              )}
             </div>
           )}
 
@@ -558,27 +615,37 @@ export function LiveVoiceModal({ isOpen, onClose, onLogMemory }: LiveVoiceModalP
               key={idx} 
               className={`flex flex-col ${item.sender === 'user' ? 'items-end' : 'items-start'}`}
             >
-              <div className="flex items-center gap-2 text-[10px] text-slate-500 mb-1">
-                <span className={item.sender === 'user' ? 'text-slate-400' : 'text-cyan-400 font-bold'}>
-                  {item.sender === 'user' ? 'YOU (SPEECH)' : 'IZA (SOVEREIGN AGENT)'}
+              <div className="flex items-center gap-2 text-[10px] text-[#96A3A1] mb-1 font-mono">
+                <span className={item.sender === 'user' ? 'text-[#96A3A1]' : 'text-[#71F5DB] font-semibold'}>
+                  {item.sender === 'user' ? 'YOU' : 'IZA'}
                 </span>
                 <span>{item.time}</span>
               </div>
               <div 
-                className={`p-2.5 sm:p-3 rounded-lg leading-relaxed max-w-[88%] font-sans border ${
+                className={`p-2.5 sm:p-3 rounded-2xl leading-relaxed max-w-[88%] font-sans text-sm ${
                   item.sender === 'user'
-                    ? 'bg-slate-800 text-slate-200 border-slate-700'
-                    : 'bg-cyan-950/40 text-cyan-100 border-cyan-500/30'
+                    ? 'bg-[#151E21] text-[#F3F6F5] border border-[#303737]'
+                    : 'bg-[#151E21] text-[#F3F6F5] border border-[#71F5DB]/40'
                 }`}
               >
                 {item.text}
                 {item.sender === 'user' && onLogMemory && (
-                  <button
-                    onClick={() => handleSaveToVault(item.text)}
-                    className="block mt-1.5 text-[10px] font-mono text-emerald-400 hover:text-emerald-300 underline uppercase tracking-wider cursor-pointer"
-                  >
-                    + Anchor in Cloud SQL Vault
-                  </button>
+                  <div className="mt-1 pt-1 border-t border-slate-700/50 flex items-center justify-between text-[10px] font-mono">
+                    {anchoredMemoriesSet.has(item.text.trim()) ? (
+                      <span className="text-emerald-400 flex items-center gap-1 font-semibold text-[9px] tracking-wide">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                        <span>Anchored to Memory</span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleSaveToVault(item.text)}
+                        className="text-slate-400 hover:text-emerald-400 text-[10px] transition-colors cursor-pointer flex items-center gap-1"
+                        title="Save this specific spoken turn to Cloud SQL Vault"
+                      >
+                        <span>+ Save to Vault</span>
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

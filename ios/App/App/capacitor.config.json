@@ -1,10 +1,11 @@
 {
-	"appId": "com.earthi.iza",
-	"appName": "IZA Sovereign Assistant",
+	"appId": "com.earthi.izalife",
+	"appName": "IZA Life",
 	"webDir": "dist",
 	"server": {
+		"url": "https://iza-life.ai.studio",
 		"androidScheme": "https",
-		"cleartext": true
+		"cleartext": false
 	},
 	"packageClassList": [
 		"PurchasesPlugin"

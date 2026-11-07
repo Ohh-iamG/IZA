@@ -19,6 +19,7 @@ import {
 import { purchases, SubscriptionState } from '../lib/purchases';
 import { signInWithGoogle, signInWithApple, signInAsDemoReviewer, logOut } from '../lib/firebase';
 import { apiFetch } from '../lib/api';
+import { PrivacyPolicyModal } from './life/PrivacyPolicyModal';
 
 interface SettingsPrivacyModalProps {
   isOpen: boolean;
@@ -43,6 +44,7 @@ export function SettingsPrivacyModal({
   const [isPurging, setIsPurging] = useState(false);
   const [confirmPurge, setConfirmPurge] = useState(false);
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
+  const [privacyPolicyOpen, setPrivacyPolicyOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -278,18 +280,36 @@ export function SettingsPrivacyModal({
             </div>
           </div>
 
-          {/* Section 4: Health Disclaimer & Store Links */}
-          <div className="flex items-center justify-between p-3 bg-slate-950/40 rounded-lg border border-slate-800">
-            <div>
-              <div className="font-bold text-slate-200 text-xs">MEDICAL DISCLAIMER</div>
-              <div className="text-[11px] text-slate-500 font-sans">Guideline 1.4: Non-diagnostic organization assistant.</div>
+          {/* Section 4: Privacy Policy & Health Disclaimer */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3 bg-slate-950/40 rounded-lg border border-slate-800">
+              <div>
+                <div className="font-bold text-[#71F5DB] text-xs flex items-center gap-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>SOVEREIGN PRIVACY POLICY</span>
+                </div>
+                <div className="text-[11px] text-slate-400 font-sans">WA Surveillance Devices Act 1998 &amp; Zero 3P Telemetry.</div>
+              </div>
+              <button
+                onClick={() => setPrivacyPolicyOpen(true)}
+                className="px-2.5 py-1 text-[#71F5DB] hover:text-[#71F5DB]/80 border border-[#71F5DB]/40 rounded text-[11px] font-mono cursor-pointer"
+              >
+                VIEW POLICY
+              </button>
             </div>
-            <button
-              onClick={onOpenDisclaimer}
-              className="px-2.5 py-1 text-amber-400 hover:text-amber-300 border border-amber-500/40 rounded text-[11px] cursor-pointer"
-            >
-              VIEW TEXT
-            </button>
+
+            <div className="flex items-center justify-between p-3 bg-slate-950/40 rounded-lg border border-slate-800">
+              <div>
+                <div className="font-bold text-slate-200 text-xs">MEDICAL DISCLAIMER</div>
+                <div className="text-[11px] text-slate-500 font-sans">Guideline 1.4: Non-diagnostic organization assistant.</div>
+              </div>
+              <button
+                onClick={onOpenDisclaimer}
+                className="px-2.5 py-1 text-amber-400 hover:text-amber-300 border border-amber-500/40 rounded text-[11px] cursor-pointer"
+              >
+                VIEW TEXT
+              </button>
+            </div>
           </div>
 
           {/* Section 5: Account Deletion (Store Requirement) */}
@@ -336,6 +356,12 @@ export function SettingsPrivacyModal({
           </div>
         </div>
       </div>
+
+      {/* Sovereign Privacy Policy Modal */}
+      <PrivacyPolicyModal
+        isOpen={privacyPolicyOpen}
+        onClose={() => setPrivacyPolicyOpen(false)}
+      />
     </div>
   );
 }

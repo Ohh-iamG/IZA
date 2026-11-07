@@ -40,7 +40,8 @@ import {
   Atom,
   Settings,
   Compass,
-  Sun
+  Sun,
+  Calendar
 } from 'lucide-react';
 import { audioEngine } from './lib/audio';
 import { LiveVoiceModal } from './components/LiveVoiceModal';
@@ -64,6 +65,18 @@ import { IzaLifeNav } from './components/IzaLifeNav';
 import { IzaLifeHome } from './components/IzaLifeHome';
 import { purchases } from './lib/purchases';
 import { apiFetch } from './lib/api';
+import { groupMemoriesByDate } from './lib/date-groups';
+import { BottomNavigation, LifeTab } from './components/life/BottomNavigation';
+import { HomeScreen, MomentItem } from './components/life/HomeScreen';
+import { RecallScreen } from './components/life/RecallScreen';
+import { PeopleScreen, PersonItem } from './components/life/PeopleScreen';
+import { MeScreen } from './components/life/MeScreen';
+import { CaptureSheet } from './components/life/CaptureSheet';
+import { VaultModal } from './components/life/VaultModal';
+import { LifeThreadModal } from './components/life/LifeThreadModal';
+import { MomentDetailModal } from './components/life/MomentDetailModal';
+import { VisualDeletionConfirmationModal } from './components/life/VisualDeletionConfirmationModal';
+import { ApiAgentsDashboard } from './components/ApiAgentsDashboard';
 
 export default function App() {
   const [time, setTime] = useState(new Date());
@@ -78,10 +91,39 @@ export default function App() {
 
   // IZA Personal Sovereign & Memory Vault State
   const [commandInput, setCommandInput] = useState('');
-  const [vaultMemories, setVaultMemories] = useState<Array<{ id: number; type: string; content: string; time: string; capturedAt?: string }>>([
+  const [vaultMemories, setVaultMemories] = useState<Array<{ id: number; type: string; content: string; time: string; capturedAt?: string; summary?: string; salience?: number; meta?: any }>>([
     { id: 1, type: 'event', content: 'Talked to Dave next door about fixing the back fence before winter.', time: '10:42 AM' },
     { id: 2, type: 'idea', content: 'Fleeting idea for new corporate structure utilizing 13-share veto rules.', time: '09:15 AM' }
   ]);
+  const [viewMode, setViewMode] = useState<'life' | 'console' | 'api_agents'>('life');
+  const [lifeTab, setLifeTab] = useState<LifeTab>('home');
+  const [captureSheetOpen, setCaptureSheetOpen] = useState(false);
+  const [vaultModalOpen, setVaultModalOpen] = useState(false);
+  const [activeDetailMoment, setActiveDetailMoment] = useState<MomentItem | null>(null);
+  const [activeThreadPerson, setActiveThreadPerson] = useState<PersonItem | null>(null);
+  const [activeThreadMoment, setActiveThreadMoment] = useState<MomentItem | null>(null);
+  const [deletionIntercept, setDeletionIntercept] = useState<{
+    isOpen: boolean;
+    description: string;
+    affectedCount: number;
+    action: () => void;
+  }>({
+    isOpen: false,
+    description: '',
+    affectedCount: 0,
+    action: () => {},
+  });
+
+  const lifeMoments: MomentItem[] = vaultMemories.map(m => ({
+    id: m.id,
+    content: m.content,
+    summary: m.summary,
+    kind: m.type || 'note',
+    capturedAt: m.capturedAt || new Date().toISOString(),
+    salience: m.salience,
+    meta: m.meta
+  }));
+
   const [memorySearch, setMemorySearch] = useState('');
   const [quickMemoryInput, setQuickMemoryInput] = useState('');
   const [quickMemoryKind, setQuickMemoryKind] = useState('note');
@@ -89,6 +131,7 @@ export default function App() {
   const [recentAnchoredAlert, setRecentAnchoredAlert] = useState<string | null>(null);
   const [showActiveContextMemories, setShowActiveContextMemories] = useState(false);
   const [memoryFilter, setMemoryFilter] = useState<'all' | 'voice' | 'dialogue' | 'notes'>('all');
+  const [dateGroupingEnabled, setDateGroupingEnabled] = useState(true);
   const [recallInsight, setRecallInsight] = useState<{ query: string; answer: string; count: number } | null>(null);
 
   const [secretsUnlocked, setSecretsUnlocked] = useState(false);
@@ -391,8 +434,11 @@ export default function App() {
           id: m.id,
           type: m.kind || 'note',
           content: m.content,
+          summary: m.summary,
           time: new Date(m.capturedAt || m.captured_at || m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          capturedAt: new Date(m.capturedAt || m.captured_at || m.createdAt || Date.now()).toISOString()
+          capturedAt: new Date(m.capturedAt || m.captured_at || m.createdAt || Date.now()).toISOString(),
+          salience: m.salience,
+          meta: m.meta,
         })));
       }
     } catch (err) {
@@ -406,12 +452,12 @@ export default function App() {
     fetchDailyPulse();
   }, []);
 
-  const anchorMemory = async (content: string, kind = 'note') => {
+  const anchorMemory = async (content: string, kind = 'note', meta?: any) => {
     if (!content.trim()) return;
     const clean = content.trim();
     const tempId = Date.now();
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const localItem = { id: tempId, type: kind, content: clean, time: timeStr, capturedAt: new Date().toISOString() };
+    const localItem = { id: tempId, type: kind, content: clean, time: timeStr, capturedAt: new Date().toISOString(), meta };
     setVaultMemories(prev => [localItem, ...prev]);
     setRecentAnchoredAlert(clean);
     setTimeout(() => {
@@ -538,19 +584,32 @@ export default function App() {
       const match = cmd.match(/iza (?:delete-search|forget|delete-matching) ["'](.*?)["']/);
       const query = match ? match[1] : cmd.replace(/^iza (?:delete-search|forget|delete-matching)\s*/, '').replace(/["']/g, '').trim();
       if (query) {
-        handleDeleteBySearch(query);
+        const matches = vaultMemories.filter(m => m.content.toLowerCase().includes(query.toLowerCase()));
+        setDeletionIntercept({
+          isOpen: true,
+          description: `Purge memories matching: "${query}"`,
+          affectedCount: matches.length || 1,
+          action: () => handleDeleteBySearch(query),
+        });
       }
     } else if (cmd.toLowerCase().startsWith('delete from memory where')) {
-      // Direct SQL delete support in terminal bar
+      // Direct SQL delete support in terminal bar intercepted
       const match = cmd.match(/content\s+(?:like|ilike)\s+['"](.*?)['"]/i);
       const exactMatch = cmd.match(/content\s*=\s*['"](.*?)['"]/i);
       const query = match ? match[1].replace(/%/g, '') : (exactMatch ? exactMatch[1] : '');
-      if (query) {
-        handleDeleteBySearch(query);
-      } else {
-        apiFetch('/api/memories/search?q=' + encodeURIComponent(cmd), { method: 'DELETE' })
-          .then(() => loadMemories());
-      }
+      const matches = query ? vaultMemories.filter(m => m.content.toLowerCase().includes(query.toLowerCase())) : vaultMemories;
+      setDeletionIntercept({
+        isOpen: true,
+        description: `SQL Direct Destruction: ${cmd}`,
+        affectedCount: matches.length || 1,
+        action: () => {
+          if (query) {
+            handleDeleteBySearch(query);
+          } else {
+            apiFetch('/api/memories/search?q=' + encodeURIComponent(cmd), { method: 'DELETE' }).then(() => loadMemories());
+          }
+        },
+      });
     } else if (cmd.startsWith('iza capture')) {
       const contentMatch = cmd.match(/iza capture ["'](.*?)["']/);
       if (contentMatch && contentMatch[1]) {
@@ -634,8 +693,233 @@ export default function App() {
     }
   };
 
+  if (viewMode === 'life') {
+    return (
+      <div className="min-h-screen bg-[#0B1012] text-[#F3F6F5] font-sans flex flex-col relative antialiased selection:bg-[#71F5DB]/20 selection:text-[#71F5DB]">
+        {/* IZA LIFE Header per Brand Standards v1.0 */}
+        <header className="sticky top-0 z-30 bg-[#0B1012]/95 backdrop-blur-md border-b border-[#1D2A2D] px-4 sm:px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
+              <img 
+                src="/assets/aistudio/iza_brand_mark.png" 
+                alt="IZA" 
+                className="h-8 sm:h-9 w-auto object-contain select-none" 
+              />
+              <span className="text-xs font-semibold tracking-wider text-[#F3F6F5] uppercase border-l border-[#303737] pl-2.5 font-sans">
+                LIFE
+              </span>
+            </div>
+            <span className="text-[12px] text-[#96A3A1] font-sans hidden md:inline border-l border-[#303737] pl-3">
+              Your life, remembered.
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsHotwordActive(!isHotwordActive)}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                isHotwordActive
+                  ? 'bg-[#71F5DB]/20 text-[#71F5DB] border border-[#71F5DB]/40'
+                  : 'bg-[#151E21] text-[#96A3A1] border border-[#303737] hover:text-[#F3F6F5] hover:border-[#71F5DB]'
+              }`}
+              title="Hands-free wake word: 'Hey IZA'"
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${isHotwordActive ? 'bg-[#71F5DB] animate-ping' : 'bg-[#96A3A1]'}`} />
+              <span>{isHotwordActive ? 'Hey IZA: on' : 'Hey IZA'}</span>
+            </button>
+
+            <button
+              onClick={() => setLiveVoiceOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#71F5DB] hover:bg-[#5ce8cd] text-[#06201B] text-xs font-semibold transition-colors cursor-pointer shadow-none"
+              title="Talk with IZA (Live Voice)"
+            >
+              <Mic className="w-3.5 h-3.5 text-[#06201B]" />
+              <span className="hidden sm:inline">Talk</span>
+            </button>
+
+            <button
+              onClick={() => setViewMode('api_agents')}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#151E21] hover:bg-[#1D2A2D] border border-[#303737] hover:border-[#71F5DB] text-[#96A3A1] hover:text-[#F3F6F5] text-xs font-medium transition-colors cursor-pointer"
+              title="IZA Control → API Usage & Safe Agent Metrics"
+            >
+              <Cpu className="w-3.5 h-3.5 text-[#71F5DB]" />
+              <span className="hidden sm:inline">API & Agents</span>
+            </button>
+
+            <button
+              onClick={() => setViewMode('console')}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#151E21] hover:bg-[#1D2A2D] border border-[#303737] hover:border-[#71F5DB] text-[#96A3A1] hover:text-[#F3F6F5] text-xs font-medium transition-colors cursor-pointer"
+              title="Switch to Sovereign Engineering Console"
+            >
+              <Terminal className="w-3.5 h-3.5 text-[#96A3A1]" />
+              <span className="hidden sm:inline">Console</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Life Tab Viewport */}
+        <main className="flex-1 max-w-xl mx-auto w-full px-4 pt-6 pb-28">
+          {lifeTab === 'home' && (
+            <HomeScreen
+              moments={lifeMoments}
+              onMomentClick={(m) => setActiveDetailMoment(m)}
+              onOpenInThread={(m) => setActiveThreadMoment(m)}
+              onContinueChat={(prompt) => {
+                setConfidantInput(prompt);
+                setLiveVoiceOpen(true);
+              }}
+              onRefresh={loadMemories}
+            />
+          )}
+
+          {lifeTab === 'recall' && (
+            <RecallScreen
+              moments={lifeMoments}
+              onMomentClick={(m) => setActiveDetailMoment(m)}
+              onOpenInThread={(m) => setActiveThreadMoment(m)}
+              onDeleteMoment={(id) => handleDeleteMemory(id)}
+              onContinueFromMoment={(content) => {
+                setConfidantInput(content);
+                setLiveVoiceOpen(true);
+              }}
+            />
+          )}
+
+          {lifeTab === 'people' && (
+            <PeopleScreen
+              moments={lifeMoments}
+              onPersonSelect={(p) => setActiveThreadPerson(p)}
+            />
+          )}
+
+          {lifeTab === 'me' && (
+            <MeScreen
+              moments={lifeMoments}
+              onOpenVault={() => setVaultModalOpen(true)}
+              onOpenMedicalDisclaimer={() => setMedicalDisclaimerOpen(true)}
+              onPurgeAccount={() => setVaultMemories([])}
+              onOpenInThread={(m) => setActiveThreadMoment(m)}
+            />
+          )}
+        </main>
+
+        {/* Life Bottom Navigation: IZA · RECALL · ＋ · PEOPLE · ME */}
+        <BottomNavigation
+          activeTab={lifeTab}
+          onTabChange={setLifeTab}
+          onOpenCapture={() => setCaptureSheetOpen(true)}
+        />
+
+        {/* Multi-modal Capture Sheet (+ Menu: Talk, See, Write, Add) */}
+        <CaptureSheet
+          isOpen={captureSheetOpen}
+          onClose={() => setCaptureSheetOpen(false)}
+          onMomentCreated={(m) => {
+            anchorMemory(m.content, m.kind, m.meta);
+            loadMemories();
+          }}
+          onOpenLiveVoice={() => setLiveVoiceOpen(true)}
+        />
+
+        {/* Sovereign Vault Modal with PassphraseSetupScreen (Argon2id) */}
+        <VaultModal
+          isOpen={vaultModalOpen}
+          onClose={() => setVaultModalOpen(false)}
+        />
+
+        {/* Shared Detail View Modal */}
+        {activeDetailMoment && (
+          <MomentDetailModal
+            moment={activeDetailMoment}
+            onClose={() => setActiveDetailMoment(null)}
+            onDeleteMoment={(id) => {
+              handleDeleteMemory(id);
+              setActiveDetailMoment(null);
+            }}
+            onContinueFromMoment={(content) => {
+              setConfidantInput(content);
+              setActiveDetailMoment(null);
+              setLiveVoiceOpen(true);
+            }}
+            onOpenInThread={(m) => {
+              setActiveDetailMoment(null);
+              setActiveThreadMoment(m);
+            }}
+          />
+        )}
+
+        {/* Life Thread Modal */}
+        {(activeThreadPerson || activeThreadMoment) && (
+          <LifeThreadModal
+            person={activeThreadPerson}
+            moment={activeThreadMoment}
+            moments={lifeMoments}
+            onClose={() => {
+              setActiveThreadPerson(null);
+              setActiveThreadMoment(null);
+            }}
+            onContinueInChat={(p) => {
+              setConfidantInput(p);
+              setLiveVoiceOpen(true);
+            }}
+          />
+        )}
+
+        {/* Live Voice Duplex Stream */}
+        <LiveVoiceModal
+          isOpen={liveVoiceOpen}
+          onClose={() => setLiveVoiceOpen(false)}
+          onLogMemory={(text) => {
+            anchorMemory(text, 'voice');
+          }}
+        />
+
+        {/* Health Disclaimer */}
+        <MedicalDisclaimerModal
+          isOpen={medicalDisclaimerOpen}
+          onClose={() => setMedicalDisclaimerOpen(false)}
+        />
+
+        {/* Visual Deletion Confirmation Intercept Modal (Reviewer & Compliance) */}
+        <VisualDeletionConfirmationModal
+          isOpen={deletionIntercept.isOpen}
+          targetDescription={deletionIntercept.description}
+          affectedCount={deletionIntercept.affectedCount}
+          onConfirm={() => {
+            deletionIntercept.action();
+            setDeletionIntercept(prev => ({ ...prev, isOpen: false }));
+          }}
+          onCancel={() => setDeletionIntercept(prev => ({ ...prev, isOpen: false }))}
+        />
+      </div>
+    );
+  }
+
+  if (viewMode === 'api_agents') {
+    return <ApiAgentsDashboard onClose={() => setViewMode('life')} />;
+  }
+
   return (
     <div className="h-screen w-screen bg-slate-900 text-slate-400 font-mono flex flex-col uppercase text-xs tracking-wider overflow-hidden">
+      {/* Navigation Bar in Console Mode */}
+      <div className="bg-[#132327] border-b border-[#1B2B30] px-4 py-2 flex items-center justify-between text-xs shrink-0 z-30">
+        <div className="flex items-center gap-3">
+          <span className="text-[#2DD4BF] font-mono">SOVEREIGN ENGINEERING CONSOLE</span>
+          <button 
+            onClick={() => setViewMode('api_agents')} 
+            className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#1A3338] hover:bg-[#22444B] border border-[#71F5DB]/40 text-[#71F5DB] hover:text-white text-[11px] font-mono transition-all cursor-pointer"
+          >
+            <Cpu className="w-3 h-3 text-[#71F5DB]" />
+            <span>API & AGENTS CONTROL</span>
+          </button>
+        </div>
+        <button 
+          onClick={() => setViewMode('life')} 
+          className="px-3 py-1 rounded-full bg-[#F1F5F9] text-[#0D1B1E] text-xs font-medium hover:bg-white transition-all cursor-pointer font-sans"
+        >
+          ← Return to IZA Life View
+        </button>
+      </div>
       {/* Absolute Boundary Transparency & Cryptographic Status Ribbon */}
       <SovereignStatusBar />
 
@@ -648,8 +932,13 @@ export default function App() {
       >
         <div>
           <h1 className="font-display text-lg font-bold text-slate-50 tracking-tight flex items-center gap-3">
-            <Fingerprint className="w-6 h-6 text-blue-500" />
-            IZA // PERSONAL SOVEREIGN CONFIDANT
+            <img 
+              src="/assets/aistudio/iza_brand_mark.png" 
+              alt="IZA" 
+              className="h-8 w-auto object-contain select-none" 
+            />
+            <span className="text-[#71F5DB] font-mono text-sm">//</span>
+            <span>PERSONAL SOVEREIGN CONFIDANT</span>
           </h1>
           <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] normal-case">
             <span className="text-emerald-400 font-bold font-mono">EXCLUSIVE BOND:</span>
@@ -1112,8 +1401,21 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Filter Pills */}
-                <div className="flex items-center gap-1 overflow-x-auto text-[9px] uppercase font-mono">
+                {/* Filter & Date Grouping Controls */}
+                <div className="flex items-center gap-1.5 overflow-x-auto text-[9px] uppercase font-mono">
+                  <button
+                    onClick={() => setDateGroupingEnabled(!dateGroupingEnabled)}
+                    className={`px-2 py-1 rounded transition-colors cursor-pointer flex items-center gap-1 shrink-0 ${
+                      dateGroupingEnabled
+                        ? 'bg-cyan-950 text-cyan-300 border border-cyan-500/60 font-bold'
+                        : 'bg-slate-900/60 text-slate-500 hover:text-slate-300 border border-slate-800'
+                    }`}
+                    title="Toggle visual grouping by date (Today, This Week, Older)"
+                  >
+                    <Calendar className="w-2.5 h-2.5" />
+                    <span>Grouped by Date</span>
+                  </button>
+
                   {(['all', 'voice', 'dialogue', 'notes'] as const).map((filter) => (
                     <button
                       key={filter}
@@ -1184,10 +1486,10 @@ export default function App() {
                 </div>
               )}
 
-              {/* Memory Items List */}
-              <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-2 max-h-64 overflow-y-auto space-y-2">
-                {vaultMemories
-                  .filter((m) => {
+              {/* Memory Items List with Date Grouping ('Today', 'This Week', 'Older') */}
+              <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-2.5 max-h-72 overflow-y-auto space-y-3">
+                {(() => {
+                  const filteredList = vaultMemories.filter((m) => {
                     const matchesSearch =
                       !memorySearch.trim() ||
                       m.content.toLowerCase().includes(memorySearch.toLowerCase()) ||
@@ -1197,58 +1499,119 @@ export default function App() {
                     if (memoryFilter === 'dialogue') return m.type.includes('dialogue');
                     if (memoryFilter === 'notes') return !m.type.includes('voice') && !m.type.includes('dialogue');
                     return true;
-                  })
-                  .map((log) => {
-                    const isVoice = log.type.includes('voice');
-                    const isDialogue = log.type.includes('dialogue');
-                    const badgeColor = isVoice 
-                      ? 'bg-purple-900/50 text-purple-300 border-purple-700' 
-                      : isDialogue
-                      ? 'bg-blue-900/50 text-blue-300 border-blue-700'
-                      : 'bg-emerald-900/50 text-emerald-300 border-emerald-700';
+                  });
 
+                  if (filteredList.length === 0) {
                     return (
-                      <div 
-                        key={log.id} 
-                        className="group flex items-start justify-between gap-3 p-2.5 rounded bg-slate-900 border border-slate-800/80 hover:border-slate-700 transition-colors"
-                      >
-                        <div className="flex-1 flex flex-col gap-1 min-w-0">
-                          <div className="flex items-center gap-2 text-[10px]">
-                            <span className={`px-1.5 py-0.5 rounded border text-[9px] uppercase font-bold font-mono ${badgeColor}`}>
-                              {log.type}
-                            </span>
-                            <span className="text-slate-500 font-mono">{log.time}</span>
-                          </div>
-                          <p className="text-slate-200 normal-case text-xs leading-relaxed font-sans select-text break-words">
-                            {log.content}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => handleDeleteMemory(log.id)}
-                          className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-red-400 transition-all cursor-pointer shrink-0"
-                          title="Purge memory from vault"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                      <div className="text-center py-6 text-slate-500 font-mono text-xs normal-case">
+                        {memorySearch ? 'No memories match your search query.' : 'Memory vault is initialized. Anything you tell IZA via chat, voice, or CLI is remembered here forever.'}
                       </div>
                     );
-                  })}
+                  }
 
-                {vaultMemories.filter((m) => {
-                  const matchesSearch =
-                    !memorySearch.trim() ||
-                    m.content.toLowerCase().includes(memorySearch.toLowerCase()) ||
-                    m.type.toLowerCase().includes(memorySearch.toLowerCase());
-                  if (!matchesSearch) return false;
-                  if (memoryFilter === 'voice') return m.type.includes('voice');
-                  if (memoryFilter === 'dialogue') return m.type.includes('dialogue');
-                  if (memoryFilter === 'notes') return !m.type.includes('voice') && !m.type.includes('dialogue');
-                  return true;
-                }).length === 0 && (
-                  <div className="text-center py-6 text-slate-500 font-mono text-xs normal-case">
-                    {memorySearch ? 'No memories match your search query.' : 'Memory vault is initialized. Anything you tell IZA via chat, voice, or CLI is remembered here forever.'}
-                  </div>
-                )}
+                  // When Date Grouping is enabled: Group into Today, This Week, Older
+                  if (dateGroupingEnabled) {
+                    type VaultMemType = typeof vaultMemories[number];
+                    const dateGroups = groupMemoriesByDate<VaultMemType>(filteredList, (m: VaultMemType) => m.capturedAt || m.time);
+                    return dateGroups.map((grp) => (
+                      <div key={grp.label} className="space-y-1.5">
+                        <div className="flex items-center justify-between px-1 pt-1 border-b border-slate-800/80 pb-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                            <span className="text-[10px] font-bold font-mono tracking-wider uppercase text-cyan-300">
+                              {grp.label}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-mono">
+                              ({grp.items.length})
+                            </span>
+                          </div>
+                          <span className="text-[9px] text-slate-500 font-sans">
+                            {grp.description}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          {grp.items.map((log) => {
+                            const isVoice = log.type.includes('voice');
+                            const isDialogue = log.type.includes('dialogue');
+                            const badgeColor = isVoice 
+                              ? 'bg-purple-900/50 text-purple-300 border-purple-700' 
+                              : isDialogue
+                              ? 'bg-blue-900/50 text-blue-300 border-blue-700'
+                              : 'bg-emerald-900/50 text-emerald-300 border-emerald-700';
+
+                            return (
+                              <div 
+                                key={log.id} 
+                                className="group flex items-start justify-between gap-3 p-2 rounded bg-slate-900/90 border border-slate-800/90 hover:border-slate-700 transition-colors"
+                              >
+                                <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+                                  <div className="flex items-center gap-2 text-[10px]">
+                                    <span className={`px-1.5 py-0.2 rounded border text-[9px] uppercase font-bold font-mono ${badgeColor}`}>
+                                      {log.type}
+                                    </span>
+                                    <span className="text-slate-500 font-mono text-[9px]">{log.time}</span>
+                                  </div>
+                                  <p className="text-slate-200 normal-case text-xs leading-relaxed font-sans select-text break-words">
+                                    {log.content}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => handleDeleteMemory(log.id)}
+                                  className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-red-400 transition-all cursor-pointer shrink-0"
+                                  title="Purge memory from vault"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ));
+                  }
+
+                  // Ungrouped flat rendering fallback
+                  return (
+                    <div className="space-y-1.5">
+                      {filteredList.map((log) => {
+                        const isVoice = log.type.includes('voice');
+                        const isDialogue = log.type.includes('dialogue');
+                        const badgeColor = isVoice 
+                          ? 'bg-purple-900/50 text-purple-300 border-purple-700' 
+                          : isDialogue
+                          ? 'bg-blue-900/50 text-blue-300 border-blue-700'
+                          : 'bg-emerald-900/50 text-emerald-300 border-emerald-700';
+
+                        return (
+                          <div 
+                            key={log.id} 
+                            className="group flex items-start justify-between gap-3 p-2.5 rounded bg-slate-900 border border-slate-800/80 hover:border-slate-700 transition-colors"
+                          >
+                            <div className="flex-1 flex flex-col gap-1 min-w-0">
+                              <div className="flex items-center gap-2 text-[10px]">
+                                <span className={`px-1.5 py-0.5 rounded border text-[9px] uppercase font-bold font-mono ${badgeColor}`}>
+                                  {log.type}
+                                </span>
+                                <span className="text-slate-500 font-mono">{log.time}</span>
+                              </div>
+                              <p className="text-slate-200 normal-case text-xs leading-relaxed font-sans select-text break-words">
+                                {log.content}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteMemory(log.id)}
+                              className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-red-400 transition-all cursor-pointer shrink-0"
+                              title="Purge memory from vault"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -1679,25 +2042,71 @@ export default function App() {
         }}
       />
 
-      {/* IZA LIFE navigation: IZA · RECALL · ＋ · PEOPLE · ME */}
-      <IzaLifeNav
-        onHome={() => {
-          setLiveVoiceOpen(false);
-          setVisualUploadOpen(false);
-          setUniversalSearchOpen(false);
-          setEntityDrawerOpen(false);
-          setSettingsOpen(false);
-          setWebAgentOpen(false);
-          setSpatialMemoryOpen(false);
-          setRitualsOpen(false);
+      {/* Multi-modal Capture Sheet (+ Menu: Talk, See, Write, Add) */}
+      <CaptureSheet
+        isOpen={captureSheetOpen}
+        onClose={() => setCaptureSheetOpen(false)}
+        onMomentCreated={(m) => {
+          anchorMemory(m.content, m.kind, m.meta);
+          loadMemories();
         }}
-        onRecall={() => setUniversalSearchOpen(true)}
-        onPeople={() => setEntityDrawerOpen(true)}
-        onMe={() => setSettingsOpen(true)}
-        onTalk={() => setLiveVoiceOpen(true)}
-        onSee={() => setVisualUploadOpen(true)}
-        onAdd={() => setAudioTranscribeOpen(true)}
-        onWrite={(text) => anchorMemory(text, 'note')}
+        onOpenLiveVoice={() => setLiveVoiceOpen(true)}
+      />
+
+      {/* Sovereign Vault Modal with PassphraseSetupScreen (Argon2id) */}
+      <VaultModal
+        isOpen={vaultModalOpen}
+        onClose={() => setVaultModalOpen(false)}
+      />
+
+      {/* Shared Detail View Modal */}
+      {activeDetailMoment && (
+        <MomentDetailModal
+          moment={activeDetailMoment}
+          onClose={() => setActiveDetailMoment(null)}
+          onDeleteMoment={(id) => {
+            handleDeleteMemory(id);
+            setActiveDetailMoment(null);
+          }}
+          onContinueFromMoment={(content) => {
+            setConfidantInput(content);
+            setActiveDetailMoment(null);
+            setLiveVoiceOpen(true);
+          }}
+          onOpenInThread={(m) => {
+            setActiveDetailMoment(null);
+            setActiveThreadMoment(m);
+          }}
+        />
+      )}
+
+      {/* Life Thread Modal */}
+      {(activeThreadPerson || activeThreadMoment) && (
+        <LifeThreadModal
+          person={activeThreadPerson}
+          moment={activeThreadMoment}
+          moments={lifeMoments}
+          onClose={() => {
+            setActiveThreadPerson(null);
+            setActiveThreadMoment(null);
+          }}
+          onContinueInChat={(p) => {
+            setConfidantInput(p);
+            setLiveVoiceOpen(true);
+          }}
+        />
+      )}
+
+      {/* Visual Deletion Confirmation Intercept Modal (Reviewer & Compliance) */}
+      <VisualDeletionConfirmationModal
+        isOpen={deletionIntercept.isOpen}
+        targetDescription={deletionIntercept.description}
+        affectedCount={deletionIntercept.affectedCount}
+        onConfirm={() => {
+          deletionIntercept.action();
+          setDeletionIntercept(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => setDeletionIntercept(prev => ({ ...prev, isOpen: false }))}
       />
     </div>
   );

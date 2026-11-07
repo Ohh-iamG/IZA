@@ -1,14 +1,14 @@
 {
-  "name": "IZA Sovereign Companion",
-  "short_name": "IZA",
-  "description": "The Trinitarian Operating System interface for human sovereignty and biophysical telemetry.",
+  "name": "IZA Life",
+  "short_name": "IZA Life",
+  "description": "Your quiet personal life companion. Everything you capture becomes a Moment.",
   "start_url": "/",
   "id": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#0D1B1E",
+  "theme_color": "#0D1B1E",
   "icons": [
     {
       "src": "/pwa-192x192.png",

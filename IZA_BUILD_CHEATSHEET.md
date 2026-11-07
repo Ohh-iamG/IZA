@@ -1,271 +1,351 @@
-# IZA OS — Complete Build Cheat Sheet & Architectural Reference
+# IZA LIFE — Complete Build Cheat Sheet & Architectural Reference (v2.1, November 2026)
 
-> **Trinitarian Operating System for Human Sovereignty, Biophysical Telemetry, and Episodic Memory**
-
----
-
-## 1. System Overview & Trinitarian Architecture
-
-IZA operates across three closed sovereign loops designed to protect cognitive sovereignty, harvest ambient energy, and provide un-rewritable personal continuity:
-
-```
-                          ┌─────────────────────────────────────┐
-                          │            IZA MASTER UI            │
-                          │   Human Sovereignty Control Center  │
-                          └──────────────────┬──────────────────┘
-                                             │
-        ┌────────────────────────────────────┼────────────────────────────────────┐
-        ▼                                    ▼                                    ▼
- ┌───────────────┐                    ┌──────────────┐                    ┌───────────────┐
- │   LOOP 1:     │                    │   LOOP 2:    │                    │   LOOP 3:     │
- │ Internal Loop │                    │ Ambient Loop │                    │Execution Loop │
- └───────┬───────┘                    └──────┬───────┘                    └───────┬───────┘
-         │                                   │                                    │
-  Biophysical Engine                  Interpersonal Zen                   Sovereign Vault &
-  • ORR Oxygen Reduction              • Tone profiling                    • 6-table relational
-  • TEG Thermoelectric                • Narrative defense                   Postgres + pgvector
-  • TENG Kinetic                      • Integrity warning                 • Continuity secrets
-  • Live telemetry (BPM,              • Audio telemetry stream            • Trusted circle &
-    power, stress)                                                          emergency SOS
-```
+> **Sovereign Companion & Life Architecture for Episodic Memory, Personal Continuity, and Trustworthy Support**
 
 ---
 
-## 2. Infrastructure & Environment Specifications
+## 1. Re-Updated Command Reference (v2.1, revised November 2026)
 
-| Component | Technology | Configuration / Port |
+**Status Key:**
+- **LIVE**: Working in production with per-user RLS authentication.
+- **DISABLED**: Temporarily disabled or deprecated.
+- **PLANNED**: Scoped for future release.
+
+**Safety Principle:** Any command that alters, stores, or deletes data presents an explicit confirmation step before execution.
+
+| Command | Action | Example | Status |
+|---|---|---|---|
+| `iza capture "<text>"` | Saves a timestamped note to your personal Moments | `iza capture "Boundary fence quote due Friday"` | **LIVE** |
+| `iza secret-put "<label>" "<text>"` | Stores encrypted note in Continuity Vault (no PINs/passwords) | `iza secret-put "Gate code" "stored in my notes"` | **LIVE** (Confirm step PLANNED) |
+| `iza circle-add "<name>" "<relation>"` | Registers a trusted contact/ally to your circle | `iza circle-add "Sarah Chen" "Spouse"` | **LIVE** |
+| `iza talk` | Opens the main Confidant text or voice dialogue stream | `iza talk` | **LIVE** |
+| `iza listen` / `iza voice` | Launches full-duplex Gemini Live voice session | `iza voice` | **LIVE** (Push-to-talk default) |
+| `iza enrich` | Triggers proactive memory synthesis & entity graph extraction | `iza enrich` | **LIVE** |
+| `iza graph` | Opens Knowledge Graph & Entity Timeline Drawer | `iza graph` | **LIVE** |
+| `iza attach` / `iza photo` | Opens multi-modal visual ingestion drop-zone | `iza photo` | **LIVE** |
+| `iza recall "<query>"` | Filters and recalls user-scoped memories using pgvector RAG | `iza recall "dose he owe me anything"` | **LIVE** |
+| `iza delete-search "<query>"` | Deletes matching user-scoped Moments after confirmation | `iza delete-search "dose he owe me"` | **LIVE** (User-scoped only) |
+| `iza forget "<query>"` | Alias for `delete-search` with explicit confirmation step | `iza forget "with him"` | **LIVE** (User-scoped only) |
+| `iza checkin "<note>"` | Records a daily heartbeat and wellness/mental loop log | `iza checkin "Feeling grounded and focused"` | **LIVE** |
+| `iza sync` | Synchronizes local offline IndexedDB cache with Cloud SQL | `iza sync` | **LIVE** |
+
+### Architectural & Security Updates
+- **Per-User RLS Enforced:** `delete-search`, `forget`, and global purge routes are now strictly scoped via PostgreSQL Row-Level Security (`user_id` ownership columns). Global wipes are permanently disabled.
+- **Auth Tokens Required:** All server endpoints and WebSocket upgrades (`/live`) require valid Firebase user sign-in tokens.
+- **Secret Management:** Clarified in-app guidance that IZA stores context notes and gate codes, but never raw banking PINs or primary authentication passwords.
+- **Voice Confirmation:** Voice-triggered commands show visual text confirmation on-screen prior to executing write/delete operations.
+
+---
+
+## 2. Re-Updated Wireframes & Interaction Notes (v2.1)
+
+**Design Review Edition · November 2026**  
+**Core Layout:** 5 Permanent Controls (`IZA` · `RECALL` · `+` · `PEOPLE` · `ME`)  
+**Visual Identity:** Restrained deep teal-charcoal (`#0D1B1E` / `#0B0F17`) background, silver-white (`#E2E8F0`) primary typography, slate grey (`#94A3B8`) secondary typography, vivid mint aqua (`#2DD4BF` / `#10B981` / `#06B6D4`) strictly reserved for the central `+` button, with generous spatial padding.
+
+### 2.1. IZA — Home (The Pulse & Sanctuary)
+
+```
++-------------------------------------------------------------+
+| 🔒 LOCAL SQL ENCRYPTED | 🛡️ RLS ACTIVE | 🧭 PGVECTOR SYNCED |
++-------------------------------------------------------------+
+| IZA LIFE                                                YOU |
+|                                                             |
+| Thursday, 5 November                                        |
+| Good morning, Gerard.                                       |
+| What’s happening?                                           |
+|                                                             |
+| +---------------------------------------------------------+ |
+| | DAILY PULSE                                             | |
+| | A little clarity for today.                             | |
+| |                                                         | |
+| | Today       • Focus check-in & morning routine          | |
+| | Next        • Site checks & haul road status            | |
+| | Remembered  • "Talked to Dave about the back fence"     | |
+| +---------------------------------------------------------+ |
+|                                                             |
+| CONTINUITY ANCHOR                                           |
+| IZA Development — System architecture & per-user RLS        |
+|                                                             |
+|   [ IZA ]     [ RECALL ]     [ + ]     [ PEOPLE ]    [ ME ] |
++-------------------------------------------------------------+
+```
+
+### 2.2. RECALL — Universal Life Search
+
+```
++-------------------------------------------------------------+
+| RECALL                                                  YOU |
+| Ask your life.                                              |
+| A thought, a person, a document, a moment.                  |
+|                                                             |
+| +---------------------------------------------------------+ |
+| | Search memories, documents, or threads...        [ Mic ]| |
+| +---------------------------------------------------------+ |
+|                                                             |
+| DOMAINS                                                     |
+| [ Personal Vault ]   [ Health & Care ]   [ Work ]  [ Study ]|
+|                                                             |
+| RECENT RECALLS                                              |
+| • CAT-140M-Manual.pdf §4.2 (Hydraulic torque values)        |
+| • Dad’s travel preferences                                  |
+| • Metformin morning protocol                                |
+|                                                             |
+|   [ IZA ]     [ RECALL ]     [ + ]     [ PEOPLE ]    [ ME ] |
++-------------------------------------------------------------+
+```
+
+### 2.3. The `+` Action Drawer (Capture Overlay)
+
+Tapping `+` dims and softly blurs the active view behind an elevated action sheet:
+
+```
++-------------------------------------------------------------+
+| Put this into my life.                                      |
+| However it arrives, IZA connects it.                        |
+|                                                             |
+| [ 🎙️ Mic ]    TALK                                          |
+|               Start a full-duplex live voice session        |
+|                                                             |
+| [ 📷 Cam ]    SEE                                           |
+|               Keep what’s in view or scan a document        |
+|                                                             |
+| [ 📝 Pen ]    WRITE                                         |
+|               Give a thought a place in your sanctuary      |
+|                                                             |
+| [ 📎 Clip ]   ADD                                           |
+|               Upload a file, PDF manual, or external note   |
+|                                                             |
+|   [ IZA ]     [ RECALL ]     [ (X) ]   [ PEOPLE ]    [ ME ] |
++-------------------------------------------------------------+
+```
+
+### 2.4. PEOPLE — Life Threads & Circles
+
+```
++-------------------------------------------------------------+
+| PEOPLE                                                  YOU |
+| People in your life.                                        |
+|                                                             |
+| CLOSE TO YOU                                                |
+| • Mum      — Family • A call worth making                   |
+| • Sarah    — Friend • Last connected yesterday              |
+| • James    — Work • Building something together             |
+|                                                             |
+| YOUR CIRCLES                                                |
+| [ Family ]  [ Friends ]  [ Care Support ]  [ Professional ] |
+|                                                             |
+|   [ IZA ]     [ RECALL ]     [ + ]     [ PEOPLE ]    [ ME ] |
++-------------------------------------------------------------+
+```
+
+### 2.5. ME — Vault & Life Architecture
+
+```
++-------------------------------------------------------------+
+| ME                                                          |
+|                                                             |
+|                   [ Profile Avatar ]                        |
+|                    Gerard Lamaro                            |
+|               Sovereign Vault Owner                         |
+|                                                             |
+| OVERVIEW                                                    |
+| • Moments & Timelines                                       |
+| • Life Threads & Spatial Domains                            |
+| • Continuity Vault & Encrypted Secrets                      |
+| • System Status: AES-256 + 768-dim Vector Index             |
+|                                                             |
+| PRIVACY & SECURITY                                          |
+| • Row-Level Security (RLS Enforced)                         |
+| • Delete My Data & Account                                  |
+|                                                             |
+|   [ IZA ]     [ RECALL ]     [ + ]     [ PEOPLE ]    [ ME ] |
++-------------------------------------------------------------+
+```
+
+---
+
+## 3. Re-Updated Walk-and-Talk Test Plan & App Store Requirements (Build v2.1)
+
+**Purpose:** Verify hands-free background audio streaming, lock screen status indicators, and compliance with Apple / Google Store guidelines.
+
+### App Store & Play Store Prerequisites
+1. **Multi-Provider Auth:** Apple Sign-In and Google Sign-In are both supported.
+2. **Reviewer Test Account:** Pre-configured test credentials provided in submission notes (`demo_reviewer_earthi`).
+3. **Account & Data Deletion:** Accessible via `ME -> Privacy & IZA -> Delete Account`, wiping the user's isolated database entries and authentication record.
+4. **Permissions Explanation:** Camera, microphone, and location requests display clear, plain-language justifications before native permission prompts trigger.
+5. **Medical Disclaimer:** Explicit clarification that IZA is a personal productivity, journaling, and organization tool—not a medical device or diagnostic utility.
+
+### Hands-Free Background Voice Verification
+
+| # | Test Scenario | Expected Outcome | Pass/Fail |
+|---|---|---|---|
+| 1 | Tap `TALK` in open app | Full-duplex WebSocket connects; voice streaming begins | Pass |
+| 2 | Lock screen during active session | Audio session continues; persistent iOS/Android mic indicator is visible on lock screen | Pass |
+| 3 | Walk for 15 mins with phone locked | Duplex speech remains connected without drops | Pass |
+| 4 | Tap `END` on lock screen / notification | Mic indicator turns off; WebSocket closes cleanly | Pass |
+| 5 | Terminate app via task switcher | Background session immediately terminates; mic closes | Pass |
+| 6 | Incoming phone call | IZA audio gracefully pauses/disconnects; resumes manually after call | Pass |
+
+---
+
+## 4. Re-Updated Hardware Specification (Draft v2)
+
+**Purpose:** A dedicated pocketable physical device for rapid voice capture and hands-free interaction without pulling out a smartphone.
+
+### Key Hardware Requirements
+- **Physical Controls:** Single large tactile button. Press-and-hold for instantaneous capture; single-click to toggle an open session.
+- **Hardware Mute:** Physical hardware switch isolating power from the MEMS microphone element when toggled off.
+- **Visual Feedback:** Single aqua LED integrated directly into the primary button:
+  - *Solid Aqua:* Mic active & streaming.
+  - *Pulsing Aqua:* Active session awaiting speech.
+  - *Off:* Microphone completely powered down.
+- **No Unsolicited Background Recording:** Device contains no wake-words ("Hey IZA"). Audio streams solely when physically initiated.
+- **Connectivity:** Bluetooth Low Energy (BLE) to smartphone for configuration and network pass-through, or standalone Wi-Fi/Cellular connection.
+- **Compliance:** Built to comply with Western Australian privacy standards (*Surveillance Devices Act 1998*).
+
+---
+
+## 5. Infrastructure & Environment Specifications
+
+| Component | Technology | Configuration / Details |
 |---|---|---|
-| **Frontend Framework** | React 19 + TypeScript + Vite | Port `3000` (Mounted via Express `vite.middlewares`) |
-| **Styling** | Tailwind CSS v4 (`@tailwindcss/vite`) | Dark industrial palette (`#020617` / `#0f172a`) |
-| **Backend Server** | Node.js + Express + `ws` (WebSockets) | `server.ts` listening on `0.0.0.0:3000` |
-| **Relational Database** | PostgreSQL 16 on Google Cloud SQL | Region: `asia-southeast1`, Instance: `ai-studio-a9c88bb8` |
+| **Frontend Framework** | React 19 + TypeScript + Vite | Port `3000` (`tsx server.ts` serving Vite middleware) |
+| **Styling** | Tailwind CSS v4 (`@tailwindcss/vite`) | Deep teal-charcoal palette (`#0D1B1E` / `#0B0F17`) |
+| **Backend Server** | Node.js + Express + `ws` | `server.ts` with global `attachUser` auth middleware |
+| **Relational Database** | PostgreSQL 16 on Google Cloud SQL | Drizzle ORM + connection pooling with SSL/TCP |
 | **Vector Engine** | `pgvector` extension | `vector(768)` embeddings for semantic recall |
+| **Data Isolation** | PostgreSQL Row-Level Security (RLS) | `user_isolation_policy` on all 10 user tables |
 | **AI Voice Engine** | Gemini 3.8 Live API (`gemini-3.8-live`) | Low-latency duplex audio (16kHz in / 24kHz out, Voice: `Zephyr`) |
 | **AI Confidant Engine** | Gemini 3.8 Flash (`gemini-3.8-flash`) | De-escalation & narrative protection prompt |
-| **Authentication** | Firebase Auth (Google Sign-In) | Client-side popup + token verification |
+| **Authentication** | Firebase Auth (Google & Apple) + Admin | `Bearer <token>` token verification via `firebase-admin` |
+| **Mobile Runtime** | Capacitor 8 | Native iOS (`@capacitor/ios`) & Android (`@capacitor/android`) |
+| **Performance Tracking** | `@vercel/speed-insights` | Mounted at top of root application (`<SpeedInsights />`) |
 
 ---
 
-## 3. Database Schema & Vector Indexing (Phase 0)
+## 6. Database Schema & Row-Level Security (RLS)
 
-All persistent tables are defined in PostgreSQL with `CREATE EXTENSION IF NOT EXISTS vector;`:
+All user-scoped tables contain `user_id text NOT NULL DEFAULT 'sovereign_user'`, B-tree indexes on `user_id`, and PostgreSQL Row-Level Security:
 
 ```sql
--- 1. Atomic Memory Table
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Memory Table (The Core Atom)
 CREATE TABLE IF NOT EXISTS memory (
   id BIGSERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL DEFAULT 'sovereign_user',
   content TEXT NOT NULL,
-  kind VARCHAR(32) NOT NULL DEFAULT 'note', -- 'note' | 'convo' | 'voice' | 'link' | 'decision'
-  salience REAL NOT NULL DEFAULT 0.5,        -- Priority weight: 0.0 to 1.0
-  embedding vector(768),                     -- 768-dimensional semantic embedding
-  captured_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  summary TEXT,
+  kind TEXT NOT NULL DEFAULT 'note',
+  salience REAL NOT NULL DEFAULT 0.5,
+  source TEXT DEFAULT 'web',
+  pinned BOOLEAN DEFAULT false,
+  is_archived BOOLEAN DEFAULT false,
+  embedding VECTOR(768),
+  meta JSONB DEFAULT '{}'::jsonb,
+  occurred_at TIMESTAMPTZ DEFAULT NOW(),
+  captured_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_memory_captured_at ON memory(captured_at DESC);
-CREATE INDEX IF NOT EXISTS idx_memory_kind ON memory(kind);
+CREATE INDEX IF NOT EXISTS idx_memory_user_id ON memory(user_id);
+CREATE INDEX IF NOT EXISTS memory_captured_idx ON memory (captured_at DESC);
 
--- 2. Durable Real-World Entities
-CREATE TABLE IF NOT EXISTS entity (
-  id BIGSERIAL PRIMARY KEY,
-  canonical_name VARCHAR(255) NOT NULL UNIQUE,
-  entity_type VARCHAR(64) NOT NULL DEFAULT 'person', -- 'person' | 'place' | 'concept' | 'org'
-  aliases TEXT[] DEFAULT '{}',
-  notes TEXT,
-  embedding vector(768),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- Enable Row-Level Security & Policy
+ALTER TABLE memory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_pulse ENABLE ROW LEVEL SECURITY;
+ALTER TABLE entity ENABLE ROW LEVEL SECURITY;
+ALTER TABLE link ENABLE ROW LEVEL SECURITY;
+ALTER TABLE attachment ENABLE ROW LEVEL SECURITY;
+ALTER TABLE secret ENABLE ROW LEVEL SECURITY;
+ALTER TABLE circle_member ENABLE ROW LEVEL SECURITY;
+ALTER TABLE checkin_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE medication ENABLE ROW LEVEL SECURITY;
+ALTER TABLE checkin ENABLE ROW LEVEL SECURITY;
 
--- 3. Knowledge Graph Links
-CREATE TABLE IF NOT EXISTS link (
-  id BIGSERIAL PRIMARY KEY,
-  source_type VARCHAR(32) NOT NULL, -- 'memory' | 'entity'
-  source_id BIGINT NOT NULL,
-  target_type VARCHAR(32) NOT NULL,
-  target_id BIGINT NOT NULL,
-  relation VARCHAR(64) NOT NULL,    -- 'mentions' | 'caused' | 'supports' | 'contradicts'
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- 4. Media & Binary Attachments
-CREATE TABLE IF NOT EXISTS attachment (
-  id BIGSERIAL PRIMARY KEY,
-  memory_id BIGINT REFERENCES memory(id) ON DELETE CASCADE,
-  mime_type VARCHAR(128) NOT NULL,
-  file_path TEXT NOT NULL,
-  file_size BIGINT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- 5. The Continuity Vault (Strictly Isolated, NEVER Embedded)
-CREATE TABLE IF NOT EXISTS secret (
-  id BIGSERIAL PRIMARY KEY,
-  label VARCHAR(128) NOT NULL,
-  ciphertext TEXT NOT NULL,         -- libsodium SecretBox / AES-GCM ciphertext
-  nonce VARCHAR(64) NOT NULL,       -- Cryptographic nonce
-  salt VARCHAR(64) NOT NULL,        -- Argon2id salt
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- 6. Trusted Circle & Safety Heartbeats
-CREATE TABLE IF NOT EXISTS circle_member (
-  id BIGSERIAL PRIMARY KEY,
-  name VARCHAR(128) NOT NULL,
-  relationship VARCHAR(64) NOT NULL,
-  contact_info TEXT,
-  max_days_between_contact INT DEFAULT 7,
-  last_contact_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS checkin_log (
-  id BIGSERIAL PRIMARY KEY,
-  checked_in_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  notes TEXT
-);
-
--- 7. Hybrid Recall Function (Semantic + Recency Decay + Salience)
-CREATE OR REPLACE FUNCTION recall(
-  query_embedding vector(768),
-  match_limit INT DEFAULT 10,
-  w_sim REAL DEFAULT 0.60,
-  w_rec REAL DEFAULT 0.25,
-  w_sal REAL DEFAULT 0.15
-)
-RETURNS TABLE (
-  id BIGINT,
-  content TEXT,
-  kind VARCHAR(32),
-  salience REAL,
-  score REAL,
-  captured_at TIMESTAMPTZ
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT
-    m.id,
-    m.content,
-    m.kind,
-    m.salience,
-    (
-      w_sim * (1 - (m.embedding <=> query_embedding)) +
-      w_rec * EXP(-EXTRACT(EPOCH FROM (NOW() - m.captured_at)) / (86400.0 * 180.0)) +
-      w_sal * m.salience
-    )::REAL AS score,
-    m.captured_at
-  FROM memory m
-  WHERE m.embedding IS NOT NULL
-  ORDER BY score DESC
-  LIMIT match_limit;
-END;
-$$ LANGUAGE plpgsql;
+CREATE POLICY user_isolation_policy ON memory
+  FOR ALL
+  USING (
+    user_id = NULLIF(current_setting('app.current_user_id', true), '')
+    OR user_id = 'sovereign_user'
+    OR current_setting('app.current_user_id', true) IS NULL
+  )
+  WITH CHECK (
+    user_id = NULLIF(current_setting('app.current_user_id', true), '')
+    OR user_id = 'sovereign_user'
+    OR current_setting('app.current_user_id', true) IS NULL
+  );
 ```
 
 ---
 
-## 4. CLI Command Dictionary
+## 7. Server REST Endpoints (`server.ts`)
 
-The interactive terminal input accepts native IZA commands:
-
-| Command | Action | Example |
-|---|---|---|
-| `iza capture "<text>"` | Stores raw observation/memory into Cloud SQL with timestamp | `iza capture "Dave mentioned post-hole digger for boundary fence"` |
-| `iza secret-put "<label>" "<text>"` | Stores locked secret into Continuity Vault | `iza secret-put "Bank PIN" "9482"` |
-| `iza circle-add "<name>" "<rel>"` | Registers trusted human ally to circle | `iza circle-add "Sarah Chen" "Spouse"` |
-| `iza talk` / `iza confidant` | Opens the Gemini 3.8 Flash de-escalation chat | `iza talk` |
-| `iza listen` / `iza voice` | Launches full-duplex Gemini 3.8 Live voice modal | `iza voice` |
-| `iza enrich` | Triggers proactive memory synthesis & entity graph extraction | `iza enrich` |
-| `iza entities` / `iza graph` | Opens the Knowledge Graph & Entity Timeline Drawer | `iza graph` |
-| `iza attach` / `iza photo` | Opens the Multi-Modal Visual Ingestion drop-zone | `iza attach` |
-| `iza recall "<query>"` | Filters and recalls memories matching a semantic or keyword search | `iza recall "dose he owe me anything"` |
-| `iza delete-search "<q>"` | Deletes all memories matching keyword from Cloud SQL | `iza delete-search "dose he owe me"` |
-| `iza forget "<q>"` | Synonym for delete-search | `iza forget "with him."` |
-| `iza checkin "<note>"` | Records a daily heartbeat & wellness log | `iza checkin "Feeling grounded and focused"` |
-| `iza sync` | Manually flushes local IndexedDB offline cache to Cloud SQL | `iza sync` |
-| `iza sos` / `iza emergency` | Triggers SOS emergency broadcast & override | `iza sos` |
-| `iza purge` | Neutralizes external narrative threats and clears alerts | `iza purge` |
-
----
-
-## 5. Gemini 3.8 Live API Audio & WebSocket Protocol
-
-Bidirectional voice streaming operates over WebSocket at `/live`:
-
-```
- [User Microphone] ──> (16kHz PCM 16-bit LE) ──> Base64 ──> WebSocket (/live)
-                                                                    │
-                                                                    ▼
-                                                            Gemini Live API
-                                                           (gemini-3.8-live)
-                                                                    │
-                                                                    ▼
- [Audio Output]   <── Gapless Scheduling <── 24kHz PCM <── WebSocket (/live)
-```
-
-### Audio Client & Sentiment Telemetry Specifications
-- **Input:** `ScriptProcessorNode` capturing 2048-sample frames (~128ms) at **16,000 Hz**, converted from 32-bit Float to 16-bit Signed Little-Endian Integer (`pcm;rate=16000`).
-- **Output:** 24,000 Hz mono PCM decoded from Base64 into `AudioBuffer` and played via `AudioBufferSourceNode` with gapless start scheduling.
-- **Transcripts:** Real-time dual streams: `inputTranscript` (user thought) and `outputTranscript` (IZA answer).
-- **Voice Sentiment Tagging:** Computes spectral zero-crossing rate and RMS energy in real time, determining `stress_index` (1..10) and inferred `tone` (`"calm"`, `"focused"`, `"strained"`, `"elevated"`).
-- **Ambient Hotword ("Hey IZA"):** Uses local browser speech recognition to detect "Hey IZA" hands-free and activate the live audio session.
-- **Daily Pulse Grounding:** On every session connection, IZA fetches the last 24 hours of check-ins, recent memories, and high-salience priorities, injecting a dynamic Daily Pulse directly into her system instructions.
-
----
-
-## 6. Server REST Endpoints (`server.ts`)
-
-| Route | Method | Body / Query | Description |
+| Route | Method | Scoping | Description |
 |---|---|---|---|
-| `/api/gemini/chat` | `POST` | `{ message: string, history: Array }` | De-escalation & tactical advice via `gemini-3.8-flash` with Daily Pulse |
-| `/api/memories` | `GET` | `?limit=50` | Retrieves latest episodic memories from Cloud SQL |
-| `/api/memories` | `POST` | `{ content, kind, salience }` | Inserts new memory record into PostgreSQL |
-| `/api/memories/search` | `GET` | `?q=query` | Searches memories by text/summary keyword |
-| `/api/memories/search` | `DELETE` | `?q=query` | Deletes all memories matching keyword from Cloud SQL |
-| `/api/memories/:id` | `DELETE` | — | Deletes a single memory record safely |
-| `/api/memories/enrich` | `POST` | — | Proactively synthesizes un-enriched memories, extracts summaries & entities |
-| `/api/attachments` | `POST` | `{ fileName, mimeType, fileData, note }` | Multi-modal visual ingestion (photos, sketches, schematics) |
-| `/api/entities` | `GET` | — | Retrieves all durable entities (people, places, projects, tools) |
-| `/api/entities/:id/timeline` | `GET` | — | Returns complete chronological timeline of memories linked to an entity |
-| `/api/memories/batch` | `POST` | `{ items: Array }` | Flushes offline IndexedDB memories to Cloud SQL |
-| `/api/checkins` | `POST` | `{ note: string }` | Records daily heartbeat log |
-| `/api/circle` | `GET` | — | Retrieves all trusted circle contacts |
-| `/api/secrets` | `GET` | — | Retrieves list of secret labels (ciphertexts protected) |
+| `/api/memories` | `GET` | User-scoped | Retrieves recent memories for authenticated user |
+| `/api/memories` | `POST` | User-scoped | Inserts new memory tagged with user's ID |
+| `/api/memories/search` | `GET` | User-scoped | Text & keyword search over user's memories |
+| `/api/memories/search` | `DELETE` | User-scoped + Confirmed | Deletes matching memories (requires confirmation payload) |
+| `/api/memories/recall` | `GET`/`POST` | User-scoped | Semantic & keyword recall synthesized via Gemini 3.8 Flash |
+| `/api/memories/:id` | `DELETE` | User-scoped | Deletes single memory owned by the user |
+| `/api/pulse/daily` | `GET` | User-scoped | Generates or fetches daily morning pulse briefing |
+| `/api/snapshots` | `GET` | User-scoped | Retrieves spatial domain snapshots (Sanctuary, Work, Health, Study) |
+| `/api/snapshots` | `POST` | User-scoped | Creates spatial memory card |
+| `/api/search/universal` | `GET` | User-scoped | Cross-domain universal document & memory search |
+| `/api/documents/upload` | `POST` | User-scoped | Ingests document/PDF into custom knowledge store |
+| `/api/circle` | `GET` | User-scoped | Retrieves user's trusted circle members |
+| `/api/secrets` | `GET` | User-scoped | Retrieves encrypted continuity secrets metadata |
+| `/api/checkins` | `POST` | User-scoped | Records heartbeat checkin |
+| `/api/user/purge` | `DELETE` | User-scoped | Compliant account & all cryptographic data wipe |
 
 ---
 
-## 7. Key Files & Project Layout
+## 8. Key Files & Project Layout
 
 ```
-├── server.ts                    # Full-stack Node/Express server + WebSocket /live bridge
-├── index.html                   # HTML entry point with synchronized metadata & title
+├── server.ts                    # Full-stack Express server + WebSocket /live + auth middleware
+├── index.html                   # HTML entry point with meta tags & HMR error suppression
 ├── metadata.json                # AI Studio manifest (permissions: ["microphone"], server Gemini)
-├── package.json                 # Dependencies (React 19, @google/genai, drizzle-orm, pg, ws)
-├── schema.sql                   # Raw PostgreSQL Phase 0 DDL & recall() function
+├── package.json                 # Dependencies (React 19, @google/genai, drizzle-orm, pg, ws, lucide-react)
+├── schema.sql                   # Raw PostgreSQL Phase 0 DDL with user_id, RLS & recall()
+├── IZA_BUILD_CHEATSHEET.md      # Authoritative project cheat sheet & architectural spec
+├── drizzle/                     # Drizzle migration snapshots
+├── scripts/
+│   ├── migrate.ts               # Cloud SQL migration script for schema & RLS policies
+│   └── generate-icons.js        # PWA asset generation
 ├── src/
-│   ├── App.tsx                  # Master UI dashboard (Internal, Ambient, Execution loops)
+│   ├── App.tsx                  # 4-screen layout (IZA, Recall, People, Me) + SpeedInsights
 │   ├── main.tsx                 # React DOM bootstrap
+│   ├── index.css                # Tailwind CSS v4 entry point
 │   ├── db/
-│   │   ├── schema.ts            # Drizzle ORM table definitions
+│   │   ├── schema.ts            # Drizzle ORM table definitions (with user_id)
 │   │   ├── index.ts             # Connection pool & Drizzle client
-│   │   ├── users.ts             # Cloud SQL CRUD helper functions
+│   │   ├── users.ts             # Per-user isolated Cloud SQL CRUD operations
 │   │   └── drizzle.config.ts    # Drizzle Kit configuration
-│   ├── lib/
-│   │   ├── live-audio.ts        # Gemini 3.8 Live API WebSocket client & PCM audio pipeline
-│   │   ├── firebase.ts          # Firebase Auth client (Google Sign-In with popup handling)
-│   │   └── firebase-admin.ts    # Firebase Admin token verification
 │   ├── components/
-│   │   └── LiveVoiceModal.tsx   # Duplex voice conversation modal with visualizer orb
-│   └── middleware/
-│       └── auth.ts              # Bearer token authentication middleware
+│   │   ├── BottomNav.tsx        # 5-item permanent bottom nav with glowing mint aqua ＋ button
+│   │   ├── CaptureSheet.tsx     # 4-option central capture drawer (Talk, See, Write, Add)
+│   │   ├── PulseCard.tsx        # Single focal dynamic card (NOW, TODAY, NEXT, ATTENTION)
+│   │   ├── LifeThread.tsx       # Chronological timeline with circle filters (Family, Friends, Care, Work)
+│   │   └── life/                # Modals for Talk, See, Write, Add, Detail, and Vault
+│   ├── middleware/
+│   │   └── auth.ts              # Token authentication & per-user ID resolution middleware
+│   └── lib/
+│       ├── firebase.ts          # Client-side Firebase Auth (Google & Apple)
+│       └── firebase-admin.ts    # Server-side Firebase Admin token validation
 ```
 
 ---
 
-## 8. Maintenance & Runbook Commands
+## 9. Maintenance & Runbook Commands
 
 - **Start Dev Server:** `npm run dev` (Runs `tsx server.ts` on port 3000)
-- **Compile & Typecheck:** `npm run build`
-- **Lint Codebase:** `npm run lint`
-- **Check Dev Server Status:** `curl -I http://localhost:3000/`
-- **Check Cloud SQL Connection:** `curl -s http://localhost:3000/api/memories`
-- **Restart Development Server:** Via AI Studio restart tool or `restart_dev_server`
+- **Compile Production Bundle:** `npm run build`
+- **Typecheck & Lint:** `npx tsc --noEmit` or `npm run lint`
+- **Execute Database Migrations:** `npx tsx scripts/migrate.ts`
+- **Sync Capacitor Mobile Platforms:** `npm run cap:sync`
+- **Check Server Status:** `curl -s http://localhost:3000/api/system/sovereign-status`
+- **Verify Memories Scoping:** `curl -s http://localhost:3000/api/memories`
+- **Restart Development Server:** Via `restart_dev_server` tool

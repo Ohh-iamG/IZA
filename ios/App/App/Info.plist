@@ -14,6 +14,10 @@
 	<string>IZA requires camera access to capture site photos, OCR text, and live visual inspection frames.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>IZA requires Face ID to unlock your encrypted sovereign memory vault.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>IZA requires photo library access to attach documents, receipts, and images to your sovereign life moments.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>IZA allows saving captured moments and exported archives to your photo library.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

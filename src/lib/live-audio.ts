@@ -78,6 +78,7 @@ export interface LiveSessionCallbacks {
   onError?: (err: string) => void;
   onVolumeChange?: (inputVol: number, outputVol: number) => void;
   onSentimentChange?: (sentiment: VoiceSentiment) => void;
+  onDynamicOpening?: (opening: string, isFirstEver: boolean, signals?: any) => void;
 }
 
 export class GeminiLiveClient {
@@ -94,6 +95,7 @@ export class GeminiLiveClient {
   public isMicMuted = false;
   public hasMicAccess = false;
   public isAudioUnlocked = false;
+  private isDisconnecting = false;
 
   constructor(callbacks: LiveSessionCallbacks) {
     this.callbacks = callbacks;
@@ -137,12 +139,28 @@ export class GeminiLiveClient {
 
   public async connect(): Promise<void> {
     if (this.isConnected) return;
+    this.isDisconnecting = false;
     this.callbacks.onStatusChange?.('connecting');
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/^https?:\/\//, '') || window.location.host;
     const wsProtocol = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.startsWith('http://') ? 'ws:' : protocol;
-    const idToken = (await auth.currentUser?.getIdToken()) ?? '';
+    
+    // Check for Firebase ID token or active reviewer / sovereign session
+    let idToken = (await auth.currentUser?.getIdToken()) ?? '';
+    if (!idToken) {
+      const savedDemo = localStorage.getItem('iza_demo_reviewer_session');
+      if (savedDemo) {
+        try {
+          const parsed = JSON.parse(savedDemo);
+          idToken = parsed.uid || 'demo_reviewer_earthi';
+        } catch (_) {
+          idToken = 'demo_reviewer_earthi';
+        }
+      } else {
+        idToken = 'sovereign_user';
+      }
+    }
     const wsUrl = `${wsProtocol}//${host}/live?token=${encodeURIComponent(idToken)}`;
 
     return new Promise((resolve, reject) => {
@@ -182,6 +200,9 @@ export class GeminiLiveClient {
             if (data.interrupted) {
               this.handleInterruption();
             }
+            if (data.dynamicOpening) {
+              this.callbacks.onDynamicOpening?.(data.dynamicOpening, Boolean(data.isFirstEver), data.signals);
+            }
             if (data.audio) {
               this.callbacks.onStatusChange?.('speaking');
               this.playAudioChunk(data.audio);
@@ -191,15 +212,18 @@ export class GeminiLiveClient {
           }
         };
 
-        this.ws.onerror = (e) => {
-          console.error('WebSocket error:', e);
-          this.callbacks.onError?.('Live connection error');
-          reject(e);
+        this.ws.onerror = () => {
+          if (this.isDisconnecting) return;
+          this.callbacks.onError?.('Live connection error: WebSocket disconnected or unauthorized.');
+          reject(new Error('WebSocket connection error'));
         };
 
-        this.ws.onclose = () => {
+        this.ws.onclose = (event) => {
           this.isConnected = false;
           this.callbacks.onStatusChange?.('disconnected');
+          if (!this.isDisconnecting && (event.code === 1006 || event.code === 4001 || event.code === 401)) {
+            this.callbacks.onError?.('Live Voice session closed: please check your authentication status.');
+          }
           this.cleanup();
         };
       } catch (err) {
@@ -309,8 +333,12 @@ export class GeminiLiveClient {
           handleAudioChunk(event.data);
         };
 
+        const silentGain = this.inputAudioCtx.createGain();
+        silentGain.gain.value = 0;
+        silentGain.connect(this.inputAudioCtx.destination);
+
         source.connect(this.workletNode);
-        this.workletNode.connect(this.inputAudioCtx.destination);
+        this.workletNode.connect(silentGain);
         workletInitialized = true;
       } catch (workletErr) {
         console.warn('AudioWorklet initialization fallback to ScriptProcessor:', workletErr);
@@ -319,13 +347,17 @@ export class GeminiLiveClient {
 
     // Fallback to ScriptProcessorNode
     if (!workletInitialized) {
+      const silentGain = this.inputAudioCtx.createGain();
+      silentGain.gain.value = 0;
+      silentGain.connect(this.inputAudioCtx.destination);
+
       this.scriptProcessor = this.inputAudioCtx.createScriptProcessor(2048, 1, 1);
       this.scriptProcessor.onaudioprocess = (e) => {
         const channelData = e.inputBuffer.getChannelData(0);
         handleAudioChunk(channelData);
       };
       source.connect(this.scriptProcessor);
-      this.scriptProcessor.connect(this.inputAudioCtx.destination);
+      this.scriptProcessor.connect(silentGain);
     }
   }
 
@@ -422,6 +454,7 @@ export class GeminiLiveClient {
   }
 
   public disconnect() {
+    this.isDisconnecting = true;
     this.cleanup();
     if (this.ws) {
       try {

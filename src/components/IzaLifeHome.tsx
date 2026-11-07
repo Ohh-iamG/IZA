@@ -1,4 +1,5 @@
 import React from 'react';
+import { groupMemoriesByDate } from '../lib/date-groups';
 
 /**
  * IZA LIFE home: the Pulse card and the recent Moments feed.
@@ -44,7 +45,7 @@ function momentTime(m: HomeMemory): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-export function IzaLifeHome({ now, memories, pulse, feedLimit = 10 }: IzaLifeHomeProps) {
+export function IzaLifeHome({ now, memories, pulse, feedLimit = 15 }: IzaLifeHomeProps) {
   const todayCount = memories.filter((m) => {
     const t = momentTime(m);
     return t !== null && isSameDay(t, now);
@@ -53,6 +54,7 @@ export function IzaLifeHome({ now, memories, pulse, feedLimit = 10 }: IzaLifeHom
   const latest = memories[0];
   const feed = memories.slice(0, feedLimit);
   const attention = pulse?.priorities ?? [];
+  const dateGroups = groupMemoriesByDate(feed, (m) => m.capturedAt || m.time);
 
   return (
     <section className="bg-neutral-950 text-neutral-100 border-b border-neutral-800 px-4 py-5 normal-case tracking-normal font-sans">
@@ -96,23 +98,42 @@ export function IzaLifeHome({ now, memories, pulse, feedLimit = 10 }: IzaLifeHom
         )}
       </div>
 
-      {/* Moments feed */}
+      {/* Moments feed grouped by date */}
       <div className="max-w-2xl mx-auto mt-6">
-        <div className="text-[11px] tracking-widest text-neutral-400 uppercase mb-3">Moments</div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-[11px] tracking-widest text-neutral-400 uppercase">Moments Vault</div>
+          <div className="text-xs text-neutral-500">{memories.length} total</div>
+        </div>
+
         {feed.length === 0 ? (
           <p className="text-sm text-neutral-500">Nothing kept yet. Use ＋ to talk, see, write or add.</p>
         ) : (
-          <ul className="space-y-2">
-            {feed.map((m) => (
-              <li key={m.id} className="rounded-xl border border-neutral-800 bg-neutral-900/60 px-4 py-3">
-                <div className="flex items-center justify-between text-[11px] tracking-widest text-neutral-500 uppercase">
-                  <span>{m.type}</span>
-                  <span>{m.time}</span>
+          <div className="space-y-4">
+            {dateGroups.map((group) => (
+              <div key={group.label} className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-neutral-400 pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                    <span className="font-medium text-neutral-200 text-xs">{group.label}</span>
+                    <span className="text-[11px] text-neutral-500 font-mono">({group.items.length})</span>
+                  </div>
+                  <span className="text-[11px] text-neutral-500">{group.description}</span>
                 </div>
-                <p className="text-sm text-neutral-200 mt-1 line-clamp-3">{m.content}</p>
-              </li>
+
+                <ul className="space-y-2">
+                  {group.items.map((m) => (
+                    <li key={m.id} className="rounded-xl border border-neutral-800 bg-neutral-900/60 px-4 py-3 hover:border-neutral-700 transition-colors">
+                      <div className="flex items-center justify-between text-[11px] tracking-widest text-neutral-500 uppercase">
+                        <span className="text-cyan-400/90 font-mono text-[10px]">{m.type}</span>
+                        <span className="font-mono text-[10px]">{m.time}</span>
+                      </div>
+                      <p className="text-sm text-neutral-200 mt-1 line-clamp-3 leading-relaxed">{m.content}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </section>
